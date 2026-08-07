@@ -20,6 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
+test/                      npm test: streaks.js (jsdom) and skins.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx into #root
 src/
@@ -80,8 +81,22 @@ hand maintained there and must survive the splice untouched.
 
 ## 3. Testing — this project does not ship untested
 
-There is no test framework. Testing is done by driving the built `index.html` in jsdom
-with Node. Install `jsdom` if needed. The pattern:
+`npm test` runs both suites in `test/` against the built `index.html`. Run it before
+every release, and extend it rather than writing throwaway scripts:
+
+```
+test/streaks.js   Stats panel narrative lines, the pre-v2.7 tally migration,
+                  and the empty device. jsdom.
+test/skins.js     Every skin renders at 360px with no page errors and no
+                  horizontal overflow. Playwright.
+```
+
+`test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it
+exists, so no browser download is needed and a mismatched Playwright version does not
+matter. Set `CHROMIUM_PATH` to point elsewhere.
+
+There is no test framework beyond that. Testing is done by driving the built
+`index.html` in jsdom with Node. The pattern:
 
 ```js
 const { JSDOM } = require('jsdom');
