@@ -1,0 +1,12 @@
+{
+  "name": "fahtzee",
+  "private": true,
+  "description": "Build inputs for Fahtzee. index.html is generated from these; never hand edit it.",
+  "scripts": {
+    "build": "esbuild entry.jsx --bundle --minify --format=iife --outfile=bundle.js --loader:.jsx=jsx --jsx=automatic"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}
