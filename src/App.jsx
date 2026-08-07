@@ -170,7 +170,59 @@ THEMES.neon.displayFont = `'Audiowide', ${THEMES.dark.font}`;
 THEMES.tabletop.wordmarkShadow = "0 4px 0 rgba(58,46,40,0.22)";
 THEMES.neon.wordmarkShadow = "0 0 12px rgba(0,229,255,0.75), 0 0 34px rgba(0,229,255,0.4)";
 
-const SKIN_ORDER = ["dark", "light", "tabletop", "neon"];
+// ---------- Casino: green baize, gold hairlines, red felt ----------
+// Gold is a hairline colour only, never a fill, which is the whole difference
+// between classy and gaudy. The buttons are felt red with a gold edge.
+const CASINO_GOLD = "#C9A85A";
+const CASINO_FELT = "#8B1E26";
+THEMES.casino = {
+  bg: "linear-gradient(180deg, #0F5132 0%, #0B3D26 55%, #0F5132 100%)",
+  text: "#F6F1E3",
+  sub70: "rgba(246,241,227,0.72)",
+  sub60: "rgba(246,241,227,0.64)",
+  sub55: "rgba(246,241,227,0.58)",
+  sub50: "rgba(246,241,227,0.52)",
+  sub45: "rgba(246,241,227,0.48)",
+  sub35: "rgba(246,241,227,0.4)",
+  sub30: "rgba(246,241,227,0.32)",
+  sub25: "rgba(246,241,227,0.28)",
+  card: "rgba(6,32,20,0.55)",
+  card2: "rgba(6,32,20,0.42)",
+  rowBg: "rgba(246,241,227,0.03)",
+  border: "rgba(201,168,90,0.45)",
+  border2: "rgba(201,168,90,0.28)",
+  border3: "rgba(201,168,90,0.7)",
+  borderIdle: "rgba(201,168,90,0.35)",
+  inputBorder: "rgba(201,168,90,0.4)",
+  chipBg: "rgba(201,168,90,0.14)",
+  tray: "rgba(4,24,15,0.5)",
+  inputBg: "rgba(4,24,15,0.55)",
+  section: "rgba(139,30,38,0.5)",
+  diceShadow: "0 6px 14px rgba(0,0,0,0.45)",
+  blankBorder: "rgba(201,168,90,0.35)",
+  blankBg: "rgba(246,241,227,0.04)",
+  blankText: "rgba(246,241,227,0.35)",
+  green: "#9BE8B4", // a green highlight on green baize is invisible, so this lifts
+  greenBg: "rgba(155,232,180,0.16)",
+};
+THEMES.casino.font = THEMES.dark.font;
+THEMES.casino.cardBorder = `1px solid ${THEMES.casino.border}`;
+THEMES.casino.cardShadow = "0 2px 10px rgba(0,0,0,0.35)";
+THEMES.casino.dieBorder = `1px solid rgba(201,168,90,0.5)`;
+THEMES.casino.btnBorder = `1px solid rgba(201,168,90,0.65)`;
+THEMES.casino.btnShadow = "0 4px 14px rgba(0,0,0,0.4)";
+THEMES.casino.btnCase = "none"; // classy, not shouty
+THEMES.casino.btn = `linear-gradient(180deg, ${CASINO_FELT}, #6E1720)`;
+THEMES.casino.wordmark = CASINO_GOLD;
+THEMES.casino.sectionText = "rgba(246,241,227,0.92)";
+THEMES.casino.overlay = "rgba(4,20,13,0.92)";
+THEMES.casino.placeholder = "rgba(246,241,227,0.38)";
+THEMES.casino.dieFace = "linear-gradient(160deg, #FFFDF6, #F1EADA)"; // bone, not white
+THEMES.casino.diePip = "#20301F";
+THEMES.casino.displayFont = THEMES.casino.font; // no webfont: the gold does the talking
+THEMES.casino.wordmarkShadow = "0 2px 4px rgba(0,0,0,0.45)";
+
+const SKIN_ORDER = ["dark", "light", "tabletop", "neon", "casino"];
 let T = THEMES.dark;
 
 
@@ -199,6 +251,18 @@ const BoltIcon = ({ size = 20 }) => (
       strokeWidth="1.4"
       strokeLinejoin="round"
     />
+  </svg>
+);
+const ChipIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="9.2" fill="#8B1E26" stroke="#C9A85A" strokeWidth="1.6" />
+    <g fill="#C9A85A">
+      <rect x="11" y="3.4" width="2" height="3" rx="0.6" />
+      <rect x="11" y="17.6" width="2" height="3" rx="0.6" />
+      <rect x="3.4" y="11" width="3" height="2" rx="0.6" />
+      <rect x="17.6" y="11" width="3" height="2" rx="0.6" />
+    </g>
+    <circle cx="12" cy="12" r="4.4" fill="none" stroke="#F6F1E3" strokeWidth="1.3" />
   </svg>
 );
 const MoonIcon = ({ size = 20 }) => (
@@ -959,7 +1023,7 @@ export default function Fahtzee() {
       </h1>
       <button
         onClick={cycleSkin}
-        aria-label="Change skin: Classic dark, Classic light, Tabletop, or Neon"
+        aria-label="Change skin: Classic dark, Classic light, Tabletop, Neon, or Casino"
         style={{
           position: "fixed",
           top: 14,
@@ -977,7 +1041,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
