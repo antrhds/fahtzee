@@ -158,12 +158,13 @@ THEMES.light.diePip = "#1B1730";
 THEMES.tabletop.diePip = "#1B1730";
 THEMES.neon.diePip = NEON_CYAN;
 
-// Display face, for the wordmark only. The body keeps a system stack so the
-// stats table's tabular figures stay legible at 13px.
+// Display face, for the wordmark only. Audiowide ships a single weight (400);
+// the h1 asks for 900, so the browser synthesises the bold. The body keeps a
+// system stack so the stats table's tabular figures stay legible at 13px.
 THEMES.dark.displayFont = THEMES.dark.font;
 THEMES.light.displayFont = THEMES.light.font;
 THEMES.tabletop.displayFont = THEMES.tabletop.font;
-THEMES.neon.displayFont = `'Orbitron', ${THEMES.dark.font}`;
+THEMES.neon.displayFont = `'Audiowide', ${THEMES.dark.font}`;
 
 // Wordmark shadow: Tabletop stamps it, Neon lights it, the rest use a gradient
 THEMES.tabletop.wordmarkShadow = "0 4px 0 rgba(58,46,40,0.22)";
