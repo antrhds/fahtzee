@@ -99,7 +99,77 @@ THEMES.tabletop.overlay = "rgba(90,58,42,0.92)";
 THEMES.dark.placeholder = "rgba(245,243,250,0.35)";
 THEMES.light.placeholder = "rgba(36,30,61,0.4)";
 THEMES.tabletop.placeholder = "rgba(58,46,40,0.4)";
-const SKIN_ORDER = ["dark", "light", "tabletop"];
+// ---------- Neon: electric arcade ----------
+// Cyan is structural (rules, borders, the wordmark), magenta is reserved for
+// things you can press, so the eye always knows what is a control.
+const NEON_CYAN = "#00E5FF";
+const NEON_MAGENTA = "#FF00C4";
+THEMES.neon = {
+  bg: "linear-gradient(180deg, #05040F 0%, #0B0820 55%, #05040F 100%)",
+  text: "#EAF6FF",
+  sub70: "rgba(234,246,255,0.7)",
+  sub60: "rgba(234,246,255,0.6)",
+  sub55: "rgba(234,246,255,0.55)",
+  sub50: "rgba(234,246,255,0.5)",
+  sub45: "rgba(234,246,255,0.45)",
+  sub35: "rgba(234,246,255,0.35)",
+  sub30: "rgba(234,246,255,0.3)",
+  sub25: "rgba(234,246,255,0.25)",
+  card: "rgba(0,229,255,0.06)",
+  card2: "rgba(0,229,255,0.045)",
+  rowBg: "rgba(0,229,255,0.03)",
+  border: "rgba(0,229,255,0.35)",
+  border2: "rgba(0,229,255,0.22)",
+  border3: "rgba(255,0,196,0.55)",
+  borderIdle: "rgba(0,229,255,0.28)",
+  inputBorder: "rgba(0,229,255,0.3)",
+  chipBg: "rgba(0,229,255,0.1)",
+  tray: "rgba(0,0,0,0.55)",
+  inputBg: "rgba(0,0,0,0.45)",
+  section: "rgba(255,0,196,0.14)",
+  diceShadow: "0 0 18px rgba(0,229,255,0.75), 0 0 42px rgba(0,229,255,0.3)",
+  blankBorder: "rgba(0,229,255,0.3)",
+  blankBg: "rgba(0,229,255,0.04)",
+  blankText: "rgba(234,246,255,0.3)",
+  green: "#39FF9E",
+  greenBg: "rgba(57,255,158,0.16)",
+};
+THEMES.neon.font = THEMES.dark.font;
+THEMES.neon.cardBorder = `1px solid ${THEMES.neon.border}`;
+THEMES.neon.cardShadow = "0 0 24px rgba(0,229,255,0.12)";
+THEMES.neon.dieBorder = `1px solid ${NEON_CYAN}`;
+THEMES.neon.btnBorder = `1px solid rgba(255,0,196,0.6)`;
+THEMES.neon.btnShadow = "0 0 18px rgba(255,0,196,0.55), 0 0 40px rgba(255,0,196,0.25)";
+THEMES.neon.btnCase = "uppercase";
+THEMES.neon.btn = `linear-gradient(90deg, ${NEON_MAGENTA}, #7A00FF)`;
+THEMES.neon.wordmark = NEON_CYAN;
+THEMES.neon.sectionText = "rgba(234,246,255,0.85)";
+THEMES.neon.overlay = "rgba(3,2,10,0.92)";
+THEMES.neon.placeholder = "rgba(234,246,255,0.32)";
+
+// Die face and pips. Only used when a player has not picked a die colour;
+// a chosen colour still wins, so the glow does Neon's work on the dice.
+THEMES.dark.dieFace = "linear-gradient(160deg, #FFFFFF, #E8E6F0)";
+THEMES.light.dieFace = THEMES.dark.dieFace;
+THEMES.tabletop.dieFace = THEMES.dark.dieFace;
+THEMES.neon.dieFace = "linear-gradient(160deg, #12122A, #05040F)";
+THEMES.dark.diePip = "#1B1730";
+THEMES.light.diePip = "#1B1730";
+THEMES.tabletop.diePip = "#1B1730";
+THEMES.neon.diePip = NEON_CYAN;
+
+// Display face, for the wordmark only. The body keeps a system stack so the
+// stats table's tabular figures stay legible at 13px.
+THEMES.dark.displayFont = THEMES.dark.font;
+THEMES.light.displayFont = THEMES.light.font;
+THEMES.tabletop.displayFont = THEMES.tabletop.font;
+THEMES.neon.displayFont = `'Orbitron', ${THEMES.dark.font}`;
+
+// Wordmark shadow: Tabletop stamps it, Neon lights it, the rest use a gradient
+THEMES.tabletop.wordmarkShadow = "0 4px 0 rgba(58,46,40,0.22)";
+THEMES.neon.wordmarkShadow = "0 0 12px rgba(0,229,255,0.75), 0 0 34px rgba(0,229,255,0.4)";
+
+const SKIN_ORDER = ["dark", "light", "tabletop", "neon"];
 let T = THEMES.dark;
 
 
@@ -117,6 +187,17 @@ const SunIcon = ({ size = 20 }) => (
       <line x1="17.3" y1="6.7" x2="19.4" y2="4.6" />
     </g>
     <circle cx="12" cy="12" r="5" fill="#FFD23F" stroke="#FFA62B" strokeWidth="1.5" />
+  </svg>
+);
+const BoltIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M13.4 2 5.6 13.2h5.1L9.9 22l8.2-11.6h-5.3L13.4 2Z"
+      fill="#00E5FF"
+      stroke="#FF00C4"
+      strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 const MoonIcon = ({ size = 20 }) => (
@@ -260,7 +341,7 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
           ? colour
           : held
           ? "linear-gradient(160deg, #FFD23F, #FFA62B)"
-          : "linear-gradient(160deg, #FFFFFF, #E8E6F0)",
+          : T.dieFace,
         boxShadow: held
           ? "0 0 0 4px #FFD23F, 0 6px 16px rgba(255,166,43,0.45)"
           : T.diceShadow,
@@ -293,7 +374,7 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
                     width: Math.max(8, Math.round(size * 0.16)),
                     height: Math.max(8, Math.round(size * 0.16)),
                     borderRadius: "50%",
-                    background: colour ? pipColourFor(colour) : "#1B1730",
+                    background: colour ? pipColourFor(colour) : T.diePip,
                   }}
                 />
               )}
@@ -862,9 +943,10 @@ export default function Fahtzee() {
           fontWeight: 900,
           letterSpacing: "-0.02em",
           margin: "0 0 2px",
-          transform: "rotate(-2deg)",
+          transform: skin === "neon" ? "none" : "rotate(-2deg)",
+          fontFamily: T.displayFont,
           ...(T.wordmark
-            ? { color: T.wordmark, textShadow: "0 4px 0 rgba(58,46,40,0.22)" }
+            ? { color: T.wordmark, textShadow: T.wordmarkShadow }
             : {
                 background: "linear-gradient(90deg, #FFD23F, #F72585, #4CC9F0)",
                 WebkitBackgroundClip: "text",
@@ -876,7 +958,7 @@ export default function Fahtzee() {
       </h1>
       <button
         onClick={cycleSkin}
-        aria-label="Change skin: Classic dark, Classic light, or Tabletop"
+        aria-label="Change skin: Classic dark, Classic light, Tabletop, or Neon"
         style={{
           position: "fixed",
           top: 14,
@@ -894,7 +976,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
