@@ -36,7 +36,7 @@ You can shake your phone to roll, which is objectively the correct way to roll d
 
 Scored categories get crossed off, a live preview shows what every open category would pay, and the whole scorecard fits on one screen. Ties at the top are settled the only honourable way: a roll off. Three rolls of five dice each, your highest counts, and the AI takes its rolls all by itself while you watch. Still level after that? Go again. Someone will crack.
 
-The Stats panel keeps a lifetime ledger on the device: wins, win percentage, games played and best scores that count up forever, plus a feed of recent results. Roll off victories credit exactly one champion, because this scorekeeping has been through an audit. The win percentage column has started at least one argument already.
+The Stats panel keeps a lifetime ledger on the device: wins, win percentage, games played and best scores that count up forever, plus a feed of recent results. Above the table it reads the room: who is on a winning run, who is on the other kind, how the head to head stands once two players have met five times, and the best score ever alongside the name of whoever still mentions it. Roll off victories credit exactly one champion, because this scorekeeping has been through an audit. The win percentage column has started at least one argument already.
 
 The game has three skins, cycled from the button in the corner and remembered between visits. Classic Dark is arcade at night. Classic Light is for the garden. And Tabletop turns the whole thing into a board game: terracotta table, cream panels with thick charcoal outlines, a scoreboard plaque with everyone's totals up top, big outlined dice sitting on a proper board, and a scorecard laid out as tiles. Same game, different furniture. The speaker button below silences the lot, for church.
 
@@ -55,6 +55,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.7** The Stats panel now tells you the story before the table: who is on a run and who is not, the head to head once two players have met five times, and the best score ever with the name of whoever will not let it go. Old devices keep their lifetime totals and have their streaks worked out from recent games
 
 **v2.6.1** The Tabletop font now loads in the background rather than holding the game hostage, and a slow connection gets a Loading Fahtzee message instead of a blank screen. The dice were always there, they just would not appear until the typeface did
 
