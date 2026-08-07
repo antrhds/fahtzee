@@ -56,6 +56,8 @@ There is only one: no arguing with the dice. They cannot hear you and they do no
 
 ## Version history
 
+**v2.6.1** The Tabletop font now loads in the background rather than holding the game hostage, and a slow connection gets a Loading Fahtzee message instead of a blank screen. The dice were always there, they just would not appear until the typeface did
+
 **v2.6** Win percentage in the stats, roll offs are now best of three rolls each, the AI goes first in solo play so you know what you are chasing, and it takes its roll off turns by itself. Dedicated to the first ever tie: 260 apiece, settled by the machine, naturally
 
 **v2.5.1** Lobby and dice now size themselves properly on smaller phones
