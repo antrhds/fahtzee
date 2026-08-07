@@ -20,7 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom) and skins.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx into #root
 src/
@@ -89,6 +89,8 @@ test/streaks.js   Stats panel narrative lines, the pre-v2.7 tally migration,
                   and the empty device. jsdom.
 test/skins.js     Every skin renders at 360px with no page errors and no
                   horizontal overflow. Playwright.
+test/dice-colours.js  Per-skin die colours are a render-time remap only: the
+                  stored hex must survive every skin. Playwright.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it
@@ -139,9 +141,9 @@ happened.
 the corner button and persisted in localStorage under `fahtzee-skin`. The button shows
 the *next* skin's icon, not the current one. `T` is a module level variable reassigned
 each render to `THEMES[skin]`. Themes carry not just colours but construction tokens:
-`cardBorder`, `cardShadow`, `dieBorder`, `dieFace`, `diePip`, `btnBorder`, `btnShadow`,
-`btnCase`, `btn`, `font`, `displayFont`, `wordmark`, `wordmarkShadow`, `overlay`,
-`placeholder`, `sectionText`. **Every skin must define every token** — a missing one is
+`cardBorder`, `cardShadow`, `dieBorder`, `dieFace`, `diePip`, `dieColours`, `colourGlow`,
+`btnBorder`, `btnShadow`, `btnCase`, `btn`, `font`, `displayFont`, `wordmark`,
+`wordmarkShadow`, `overlay`, `placeholder`, `sectionText`. **Every skin must define every token** — a missing one is
 `undefined`, not a fallback. (The one conditional token is `wordmarkShadow`, read only
 when `wordmark` is set; dark and light leave `wordmark` null and use a gradient instead.) Tabletop has its own full playing screen layout (a separate
 `if (skin === "tabletop")` branch before the Classic return) with a scoreboard plaque, a
@@ -151,8 +153,8 @@ strings** — doing so once made the THEMES object self referential and crashed 
 
 **Add capability as a token, not a branch.** When a skin needs something the tokens
 cannot express, add a token and set it for all five, rather than an `if (skin === ...)`
-inside a component. `dieFace`, `diePip`, `displayFont` and `wordmarkShadow` were all
-added this way. The moment themes stop being data, they stop being safe to edit.
+inside a component. `dieFace`, `diePip`, `displayFont`, `wordmarkShadow`, `dieColours`
+and `colourGlow` were all added this way. The moment themes stop being data, they stop being safe to edit.
 
 **Fonts.** Tabletop uses Baloo 2, Neon uses Audiowide, both from Google Fonts in a single
 request, loaded non blocking (`media="print" onload="this.media='all'"`) with a
@@ -161,10 +163,20 @@ font request cost this project days of debugging. Note `font` is applied at the 
 so it hits everything including the stats table's tabular figures — use `displayFont`
 for a display face so it reaches the wordmark only.
 
-**Die colours.** Players pick their own die colour, and a chosen colour beats the theme.
-`dieFace` and `diePip` only apply to uncoloured dice, so a skin's character on the dice
-has to come from `diceShadow`, which applies either way. Held dice are hardcoded gold in
-every skin.
+**Die colours.** Players pick their own die colour from `COLOUR_CHOICES`. `dieFace` and
+`diePip` only apply to uncoloured dice. A skin may retune the six through the
+`dieColours` token (a map from the chosen hex to the skin's version, `null` to leave them
+alone) and may ask for `colourGlow`, which haloes each die and each player's name in
+their own colour instead of using `diceShadow`.
+
+**The stored hex is sacred.** A player's colour is written onto the player and saved into
+`fahtzee-current-game`, so `dieColours` is a *render time* remap only — never change
+`COLOUR_CHOICES` per skin, or a game saved in one skin resumes in another wearing a
+colour the picker does not offer. Every display read goes through `skinColour()`; the
+three places that write or compare the stored hex (roster creation, the taken-colour set,
+the bot's colour) deliberately do not. `test/dice-colours.js` guards this.
+
+Held dice are hardcoded gold in every skin.
 
 **Responsive.** Tony's phone is ~360 CSS px. Flex children holding inputs need
 `minWidth: 0` or they overflow. Tabletop board dice are sized from `window.innerWidth`,

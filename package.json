@@ -4,9 +4,10 @@
   "description": "Build inputs for Fahtzee. index.html is generated from these; never hand edit it.",
   "scripts": {
     "build": "esbuild entry.jsx --bundle --minify --format=iife --outfile=bundle.js --loader:.jsx=jsx --jsx=automatic",
-    "test": "node test/streaks.js && node test/skins.js",
+    "test": "node test/streaks.js && node test/skins.js && node test/dice-colours.js",
     "test:streaks": "node test/streaks.js",
-    "test:skins": "node test/skins.js"
+    "test:skins": "node test/skins.js",
+    "test:colours": "node test/dice-colours.js"
   },
   "dependencies": {
     "react": "19.2.8",

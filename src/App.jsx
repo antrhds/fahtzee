@@ -158,6 +158,30 @@ THEMES.light.diePip = "#1B1730";
 THEMES.tabletop.diePip = "#1B1730";
 THEMES.neon.diePip = NEON_CYAN;
 
+// Player die colours are stored as a hex on the player and saved into resumed
+// games, so a skin cannot change COLOUR_CHOICES itself without stranding saved
+// games on a colour the picker no longer offers. Instead each skin may remap
+// the six at render time. null means "use the colour as chosen".
+THEMES.dark.dieColours = null;
+THEMES.light.dieColours = null;
+THEMES.tabletop.dieColours = null;
+THEMES.neon.dieColours = {
+  "#FF5A5F": "#FF2E63", // Red
+  "#4CC9F0": "#00E5FF", // Blue
+  "#FFA62B": "#FF9F1C", // Orange
+  "#FFD23F": "#FFE347", // Yellow
+  "#80ED99": "#39FF9E", // Green
+  "#B388FF": "#B14BFF", // Purple
+};
+
+// When true, a die's halo takes the die's own colour instead of diceShadow —
+// a red die becomes a red tube rather than a red object under a cyan light.
+// Player names pick up the same glow.
+THEMES.dark.colourGlow = false;
+THEMES.light.colourGlow = false;
+THEMES.tabletop.colourGlow = false;
+THEMES.neon.colourGlow = true;
+
 // Display face, for the wordmark only. Audiowide ships a single weight (400);
 // the h1 asks for 900, so the browser synthesises the bold. The body keeps a
 // system stack so the stats table's tabular figures stay legible at 13px.
@@ -219,6 +243,8 @@ THEMES.casino.overlay = "rgba(4,20,13,0.92)";
 THEMES.casino.placeholder = "rgba(246,241,227,0.38)";
 THEMES.casino.dieFace = "linear-gradient(160deg, #FFFDF6, #F1EADA)"; // bone, not white
 THEMES.casino.diePip = "#20301F";
+THEMES.casino.dieColours = null;
+THEMES.casino.colourGlow = false;
 THEMES.casino.displayFont = THEMES.casino.font; // no webfont: the gold does the talking
 THEMES.casino.wordmarkShadow = "0 2px 4px rgba(0,0,0,0.45)";
 
@@ -351,7 +377,7 @@ function Confetti() {
             left: `${p.left}vw`,
             width: p.size,
             height: p.size * 0.6,
-            background: p.colour,
+            background: skinColour(p.colour),
             borderRadius: p.shape,
             animation: `confettiFall ${p.duration}s linear ${p.delay}s infinite`,
             "--spin": p.spin,
@@ -362,6 +388,18 @@ function Confetti() {
   );
 }
 
+
+// The chosen colour, translated for the current skin. Every read of a player's
+// colour goes through this, so saved games keep their stored hex and only the
+// rendering changes.
+const skinColour = (hex) => (hex && T.dieColours && T.dieColours[hex]) || hex;
+
+// A halo in the colour itself, for skins that ask for it. Returns null so
+// callers can fall back to whatever they used before.
+const colourGlowFor = (hex, strength = 1) =>
+  T.colourGlow && hex
+    ? `0 0 ${10 * strength}px ${hex}, 0 0 ${26 * strength}px ${hex}99`
+    : null;
 
 // Choose dark or light pips depending on how bright the die colour is
 const pipColourFor = (hex) => {
@@ -403,13 +441,13 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
         borderRadius: size * 0.28,
         border: held && T.dieBorder !== "none" ? "3px solid #FFD23F" : T.dieBorder,
         background: colour
-          ? colour
+          ? skinColour(colour)
           : held
           ? "linear-gradient(160deg, #FFD23F, #FFA62B)"
           : T.dieFace,
         boxShadow: held
           ? "0 0 0 4px #FFD23F, 0 6px 16px rgba(255,166,43,0.45)"
-          : T.diceShadow,
+          : colourGlowFor(skinColour(colour)) || T.diceShadow,
         cursor: disabled ? "default" : "pointer",
         padding: 8,
         transform: held ? "scale(0.92)" : "scale(1)",
@@ -439,7 +477,7 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
                     width: Math.max(8, Math.round(size * 0.16)),
                     height: Math.max(8, Math.round(size * 0.16)),
                     borderRadius: "50%",
-                    background: colour ? pipColourFor(colour) : T.diePip,
+                    background: colour ? pipColourFor(skinColour(colour)) : T.diePip,
                   }}
                 />
               )}
@@ -1246,10 +1284,10 @@ export default function Fahtzee() {
                   width: 36,
                   height: 36,
                   borderRadius: 9,
-                  background: COLOUR_CHOICES[colourPicks[i]].hex,
+                  background: skinColour(COLOUR_CHOICES[colourPicks[i]].hex),
                   flexShrink: 0,
                   border: `2px solid ${T.border3}`,
-                  boxShadow: `0 0 10px ${COLOUR_CHOICES[colourPicks[i]].hex}66`,
+                  boxShadow: `0 0 10px ${skinColour(COLOUR_CHOICES[colourPicks[i]].hex)}66`,
                   cursor: "pointer",
                   padding: 5,
                 }}
@@ -1257,7 +1295,7 @@ export default function Fahtzee() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gridTemplateRows: "repeat(3, 1fr)", width: "100%", height: "100%" }}>
                   {[0, 2, 4, 6, 8].map((cell) => (
                     <div key={cell} style={{ gridColumn: (cell % 3) + 1, gridRow: Math.floor(cell / 3) + 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: pipColourFor(COLOUR_CHOICES[colourPicks[i]].hex) }} />
+                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: pipColourFor(skinColour(COLOUR_CHOICES[colourPicks[i]].hex)) }} />
                     </div>
                   ))}
                 </div>
@@ -1529,17 +1567,17 @@ export default function Fahtzee() {
             flexDirection: "column",
             alignItems: "center",
             background: T.card,
-            border: `2px solid ${player.colour}`,
+            border: `2px solid ${skinColour(player.colour)}`,
             borderRadius: 24,
             padding: "30px 40px",
             marginBottom: 30,
-            boxShadow: `0 0 30px ${player.colour}33`,
+            boxShadow: `0 0 30px ${skinColour(player.colour)}33`,
           }}
         >
           <div style={{ fontSize: 15, color: T.sub60, marginBottom: 6 }}>
             {player.isBot ? "Sit back, it is" : "Pass the phone to"}
           </div>
-          <div style={{ fontSize: 34, fontWeight: 900, color: player.colour, marginBottom: 18 }}>
+          <div style={{ fontSize: 34, fontWeight: 900, color: skinColour(player.colour), marginBottom: 18, textShadow: colourGlowFor(skinColour(player.colour), 1.3) || "none" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               {player.name} {player.isBot ? <BotIcon size={28} /> : null}
             </span>
@@ -1557,7 +1595,7 @@ export default function Fahtzee() {
               key={i}
               style={{
                 background: T.card,
-                border: `1px solid ${i === current ? p.colour : T.border}`,
+                border: `1px solid ${i === current ? skinColour(p.colour) : T.border}`,
                 borderRadius: 14,
                 padding: "8px 14px",
                 fontSize: 14,
@@ -1565,7 +1603,7 @@ export default function Fahtzee() {
                 minWidth: 74,
               }}
             >
-              <div style={{ color: p.colour, fontWeight: 800 }}>{p.name}</div>
+              <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>{p.name}</div>
               <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{totalsFor(p).grand}</div>
             </div>
           ))}
@@ -1666,7 +1704,7 @@ export default function Fahtzee() {
                 {rolloffDice && (
                   <div style={{ display: "flex", gap: 8 }}>
                     {rolloffDice.map((d, i) => (
-                      <Die key={i} value={d} held={false} rolling={rolloffRolling} disabled colour={nextToRoll !== undefined ? players[nextToRoll].colour : players[rolloff.contenders[rolloff.contenders.length - 1]].colour} />
+                      <Die key={i} value={d} held={false} rolling={rolloffRolling} disabled colour={nextToRoll !== undefined ? skinColour(players[nextToRoll].colour) : players[rolloff.contenders[rolloff.contenders.length - 1]].colour} />
                     ))}
                   </div>
                 )}
@@ -1684,7 +1722,7 @@ export default function Fahtzee() {
                         border: `1px solid ${cIdx === rolloffWinnerIdx ? "#FFD23F" : T.border2}`,
                       }}
                     >
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: players[cIdx].colour }} />
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: skinColour(players[cIdx].colour) }} />
                       <span style={{ flex: 1, fontWeight: 800, fontSize: 15 }}>{players[cIdx].name}</span>
                       <span style={{ fontSize: 11, color: T.sub45, fontWeight: 700, marginRight: 8 }}>
                         {(rolloff.rollsTaken[cIdx] || 0)}/3
@@ -1750,7 +1788,7 @@ export default function Fahtzee() {
                 }}
               >
                 <span style={{ fontWeight: 800, color: T.sub50, width: 28 }}>{positionLabel(p)}</span>
-                <div style={{ width: 12, height: 12, borderRadius: "50%", background: p.colour }} />
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: skinColour(p.colour) }} />
                 <span style={{ flex: 1, fontWeight: 800, fontSize: 16 }}>
                   {p.name} {isChamp ? "👑" : ""}
                 </span>
@@ -1828,7 +1866,7 @@ export default function Fahtzee() {
           padding: "10px 10px",
           background: T.rowBg,
           border: "none",
-          borderLeft: `3px solid ${hasRolled ? player.colour : T.borderIdle}`,
+          borderLeft: `3px solid ${hasRolled ? skinColour(player.colour) : T.borderIdle}`,
           borderBottom: `1px solid ${T.card}`,
           cursor: hasRolled ? "pointer" : "default",
           fontFamily: "inherit",
@@ -1949,13 +1987,13 @@ export default function Fahtzee() {
         >
           {players.map((p, i) => (
             <div key={i} style={{ textAlign: "center", opacity: i === current ? 1 : 0.7, minWidth: 64 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: p.colour, letterSpacing: "0.06em" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: skinColour(p.colour), letterSpacing: "0.06em", textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>
                 {p.name.toUpperCase()}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: CREAMT, fontVariantNumeric: "tabular-nums" }}>
                 {totalsFor(p).grand}
               </div>
-              <div style={{ height: 3, background: i === current ? p.colour : "transparent", borderRadius: 2, marginTop: 2 }} />
+              <div style={{ height: 3, background: i === current ? skinColour(p.colour) : "transparent", borderRadius: 2, marginTop: 2 }} />
             </div>
           ))}
         </div>
@@ -1995,7 +2033,7 @@ export default function Fahtzee() {
                 rolling={rolling}
                 disabled={!hasRolled || player.isBot}
                 blank={!hasRolled && !rolling}
-                colour={player.colour}
+                colour={skinColour(player.colour)}
                 size={boardDie}
                 onClick={() => toggleHold(i)}
               />
@@ -2140,7 +2178,7 @@ export default function Fahtzee() {
     <>
       {/* Turn banner */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 2px" }}>
-        <div style={{ width: 12, height: 12, borderRadius: "50%", background: player.colour, boxShadow: `0 0 10px ${player.colour}88` }} />
+        <div style={{ width: 12, height: 12, borderRadius: "50%", background: skinColour(player.colour), boxShadow: `0 0 10px ${skinColour(player.colour)}88` }} />
         <span style={{ fontSize: 18, fontWeight: 800 }}>{player.name}</span>
         <span style={{ color: T.sub50, fontSize: 13 }}>· Round {round}/13 · {13 - scoredCount} to fill</span>
       </div>
@@ -2176,7 +2214,7 @@ export default function Fahtzee() {
             rolling={rolling}
             disabled={!hasRolled || player.isBot}
             blank={!hasRolled && !rolling}
-            colour={player.colour}
+            colour={skinColour(player.colour)}
             onClick={() => toggleHold(i)}
           />
         ))}
@@ -2293,7 +2331,7 @@ export default function Fahtzee() {
           }}
         >
           <span>TOTAL</span>
-          <span style={{ fontVariantNumeric: "tabular-nums", color: player.colour }}>{t.grand}</span>
+          <span style={{ fontVariantNumeric: "tabular-nums", color: skinColour(player.colour) }}>{t.grand}</span>
         </div>
       </div>
 
@@ -2304,7 +2342,7 @@ export default function Fahtzee() {
             key={i}
             style={{
               background: T.card2,
-              border: `1px solid ${i === current ? p.colour : T.border}`,
+              border: `1px solid ${i === current ? skinColour(p.colour) : T.border}`,
               borderRadius: 14,
               padding: "6px 12px",
               fontSize: 13,
@@ -2312,7 +2350,7 @@ export default function Fahtzee() {
               minWidth: 68,
             }}
           >
-            <div style={{ color: p.colour, fontWeight: 800 }}>{p.name}</div>
+            <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>{p.name}</div>
             <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{totalsFor(p).grand}</div>
           </div>
         ))}

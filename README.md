@@ -38,7 +38,7 @@ Scored categories get crossed off, a live preview shows what every open category
 
 The Stats panel keeps a lifetime ledger on the device: wins, win percentage, games played and best scores that count up forever, plus a feed of recent results. Above the table it reads the room: who is on a winning run, who is on the other kind, how the head to head stands once two players have met five times, and the best score ever alongside the name of whoever still mentions it. Roll off victories credit exactly one champion, because this scorekeeping has been through an audit. The win percentage column has started at least one argument already.
 
-The game has five skins, cycled from the button in the corner and remembered between visits. Classic Dark is arcade at night. Classic Light is for the garden. Tabletop turns the whole thing into a board game: terracotta table, cream panels with thick charcoal outlines, a scoreboard plaque with everyone's totals up top, big outlined dice sitting on a proper board, and a scorecard laid out as tiles. Neon is the actual arcade: black, cyan and magenta, everything faintly glowing, and a wordmark that thinks it is a cabinet. Casino is a green baize table with gold hairlines and red felt, which is as close as this game gets to a dinner jacket. Same game, different furniture. The speaker button below silences the lot, for church.
+The game has five skins, cycled from the button in the corner and remembered between visits. Classic Dark is arcade at night. Classic Light is for the garden. Tabletop turns the whole thing into a board game: terracotta table, cream panels with thick charcoal outlines, a scoreboard plaque with everyone's totals up top, big outlined dice sitting on a proper board, and a scorecard laid out as tiles. Neon is the actual arcade: black, cyan and magenta, everything faintly glowing, a wordmark that thinks it is a cabinet, and dice that glow in whatever colour you chose. Casino is a green baize table with gold hairlines and red felt, which is as close as this game gets to a dinner jacket. Same game, different furniture. The speaker button below silences the lot, for church.
 
 ## Bring your own sounds
 
@@ -55,6 +55,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.9** The dice now dress for the room. In Neon your colour comes out saturated and each die glows in its own colour rather than sitting under a borrowed cyan light, and your name glows to match. Everywhere else the dice look exactly as they did, and the colour you picked is still the colour you picked
 
 **v2.8** Two new skins join the cycle: Neon, which is black and cyan and magenta and glows in the dark, and Casino, which is green baize and gold and behaves itself. The dice now take their colour from the skin when nobody has picked one
 
