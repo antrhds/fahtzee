@@ -248,7 +248,82 @@ THEMES.casino.colourGlow = false;
 THEMES.casino.displayFont = THEMES.casino.font; // no webfont: the gold does the talking
 THEMES.casino.wordmarkShadow = "0 2px 4px rgba(0,0,0,0.45)";
 
-const SKIN_ORDER = ["dark", "light", "tabletop", "neon", "casino"];
+
+// ---------- The Resistance: light side ----------
+// A used-universe palette: bone canvas, slate panels, burnt orange for anything
+// that acts. Accents borrowed from modelling-paint colours — dust, rust, olive.
+const RES_ORANGE = "#DB4E1B";
+const RES_SLATE = "#3F454C";
+const RES_INK = "#2A2F35";
+THEMES.resistance = {
+  bg: "linear-gradient(180deg, #F3EFE5 0%, #E5DFD1 55%, #F3EFE5 100%)",
+  text: RES_INK,
+  sub70: "rgba(42,47,53,0.76)",
+  sub60: "rgba(42,47,53,0.66)",
+  sub55: "rgba(42,47,53,0.6)",
+  sub50: "rgba(42,47,53,0.54)",
+  sub45: "rgba(42,47,53,0.48)",
+  sub35: "rgba(42,47,53,0.4)",
+  sub30: "rgba(42,47,53,0.34)",
+  sub25: "rgba(42,47,53,0.28)",
+  card: "rgba(255,253,247,0.9)",
+  card2: "rgba(255,253,247,0.78)",
+  rowBg: "rgba(42,47,53,0.03)",
+  border: "rgba(63,69,76,0.22)",
+  border2: "rgba(63,69,76,0.13)",
+  border3: "rgba(219,78,27,0.8)",
+  borderIdle: "rgba(63,69,76,0.3)",
+  inputBorder: "rgba(63,69,76,0.26)",
+  chipBg: "rgba(219,78,27,0.1)",
+  tray: "rgba(211,190,150,0.38)",
+  inputBg: "#FFFDF8",
+  section: RES_SLATE,
+  diceShadow: "0 4px 12px rgba(42,47,53,0.22)",
+  blankBorder: "rgba(63,69,76,0.3)",
+  blankBg: "rgba(63,69,76,0.05)",
+  blankText: "rgba(42,47,53,0.4)",
+  green: "#3F7A5E",
+  greenBg: "rgba(63,122,94,0.14)",
+};
+THEMES.resistance.font = THEMES.dark.font;
+THEMES.resistance.cardBorder = `1px solid ${THEMES.resistance.border}`;
+THEMES.resistance.cardShadow = "0 2px 8px rgba(42,47,53,0.1)";
+THEMES.resistance.dieBorder = `1px solid rgba(63,69,76,0.28)`;
+THEMES.resistance.btnBorder = "none";
+THEMES.resistance.btnShadow = "0 5px 14px rgba(219,78,27,0.35)";
+THEMES.resistance.btnCase = "uppercase";
+THEMES.resistance.btn = `linear-gradient(90deg, ${RES_ORANGE}, #B23F14)`;
+THEMES.resistance.wordmark = RES_ORANGE;
+THEMES.resistance.wordmarkShadow = "0 2px 0 rgba(63,69,76,0.28)";
+THEMES.resistance.sectionText = "rgba(243,239,229,0.95)";
+THEMES.resistance.overlay = "rgba(243,239,229,0.95)";
+THEMES.resistance.placeholder = "rgba(42,47,53,0.4)";
+THEMES.resistance.dieFace = "linear-gradient(160deg, #FFFDF8, #EFE9DB)";
+THEMES.resistance.diePip = RES_INK;
+THEMES.resistance.displayFont = `'Audiowide', ${THEMES.dark.font}`;
+// Dusty rather than bright: the six taken down to modelling-paint tones so they
+// sit in the world instead of on top of it. Same names, same order.
+THEMES.resistance.dieColours = {
+  "#FF5A5F": "#C0492B", // rust
+  "#4CC9F0": "#5E86A8", // fleet blue
+  "#FFA62B": "#E58A2E", // flight suit
+  "#FFD23F": "#C9A227", // ochre
+  "#80ED99": "#3F7A5E", // squadron green
+  "#B388FF": "#7A5C8A", // dusty plum
+};
+THEMES.resistance.colourGlow = false; // a halo on a pale ground reads as smudge
+
+// A panel behind the name rows in the lobby. null leaves the rows on the card,
+// which is what every other skin wants; Resistance insets them into slate so
+// the lobby has some structure instead of white cards on a warm ground.
+THEMES.dark.rosterBand = null;
+THEMES.light.rosterBand = null;
+THEMES.tabletop.rosterBand = null;
+THEMES.neon.rosterBand = null;
+THEMES.casino.rosterBand = null;
+THEMES.resistance.rosterBand = "rgba(63,69,76,0.94)"; // a halo on a pale ground reads as smudge
+
+const SKIN_ORDER = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
 let T = THEMES.dark;
 
 
@@ -275,6 +350,17 @@ const BoltIcon = ({ size = 20 }) => (
       fill="#00E5FF"
       stroke="#FF00C4"
       strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+const StarbirdIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M12 1.8 14.1 9.9 22.2 12 14.1 14.1 12 22.2 9.9 14.1 1.8 12 9.9 9.9Z"
+      fill="#DB4E1B"
+      stroke="#3F454C"
+      strokeWidth="1.1"
       strokeLinejoin="round"
     />
   </svg>
@@ -1079,7 +1165,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <StarbirdIcon size={22} /> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
@@ -1275,6 +1361,16 @@ export default function Fahtzee() {
             backdropFilter: "blur(6px)",
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+              ...(T.rosterBand
+                ? { background: T.rosterBand, padding: 14, borderRadius: 14 }
+                : null),
+            }}
+          >
           {nameInputs.map((val, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <button
@@ -1321,6 +1417,7 @@ export default function Fahtzee() {
               />
             </div>
           ))}
+          </div>
           <button
             onClick={() => setAddBot((b) => !b)}
             style={{
