@@ -321,7 +321,22 @@ THEMES.light.rosterBand = null;
 THEMES.tabletop.rosterBand = null;
 THEMES.neon.rosterBand = null;
 THEMES.casino.rosterBand = null;
-THEMES.resistance.rosterBand = "rgba(63,69,76,0.94)"; // a halo on a pale ground reads as smudge
+THEMES.resistance.rosterBand = "rgba(63,69,76,0.94)";
+
+// Held dice. Gold is right where it is the house colour, so the five existing
+// skins keep it exactly; Resistance clamps in ink instead, because gold makes a
+// third warm colour against rust and burnt orange.
+const HELD_GOLD = { ring: "#FFD23F", halo: "rgba(255,166,43,0.45)", face: "linear-gradient(160deg, #FFD23F, #FFA62B)" };
+THEMES.dark.held = HELD_GOLD;
+THEMES.light.held = HELD_GOLD;
+THEMES.tabletop.held = HELD_GOLD;
+THEMES.neon.held = HELD_GOLD;
+THEMES.casino.held = HELD_GOLD;
+THEMES.resistance.held = {
+  ring: RES_INK,
+  halo: "rgba(42,47,53,0.5)",
+  face: "linear-gradient(160deg, #3F454C, #2A2F35)",
+}; // a halo on a pale ground reads as smudge
 
 const SKIN_ORDER = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
 let T = THEMES.dark;
@@ -514,14 +529,14 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
         width: size,
         height: size,
         borderRadius: size * 0.28,
-        border: held && T.dieBorder !== "none" ? "3px solid #FFD23F" : T.dieBorder,
+        border: held && T.dieBorder !== "none" ? `3px solid ${T.held.ring}` : T.dieBorder,
         background: colour
           ? skinColour(colour)
           : held
-          ? "linear-gradient(160deg, #FFD23F, #FFA62B)"
+          ? T.held.face
           : T.dieFace,
         boxShadow: held
-          ? "0 0 0 4px #FFD23F, 0 6px 16px rgba(255,166,43,0.45)"
+          ? `0 0 0 4px ${T.held.ring}, 0 6px 16px ${T.held.halo}`
           : colourGlowFor(skinColour(colour)) || T.diceShadow,
         cursor: disabled ? "default" : "pointer",
         padding: 8,
