@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { VERSION, COLOUR_CHOICES, PIP_LAYOUTS } from "./constants.js";
+import { VERSION, COUNTER_URL, COLOUR_CHOICES, PIP_LAYOUTS } from "./constants.js";
 import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
-import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
+import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame, flushGameTicks, fetchGameTotal } from "./storage.js";
 import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine } from "./lines.js";
 
 // ---------- Themes ----------
@@ -642,10 +642,24 @@ export default function Fahtzee() {
   setSoundEnabled(soundOn);
   const [addBot, setAddBot] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [globalGames, setGlobalGames] = useState(null);
   const [showHowTo, setShowHowTo] = useState(false);
   const [readme, setReadme] = useState(null); // null = closed, "loading", or content
   const [history, setHistory] = useState(() => loadHistory());
   const [tally, setTally] = useState(() => loadTally());
+
+  // The global counter. Send anything queued, then show the total. Entirely
+  // optional: if it is switched off or the network is away, nothing appears and
+  // nothing waits on it.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const afterFlush = await flushGameTicks(COUNTER_URL);
+      const total = afterFlush ?? (await fetchGameTotal(COUNTER_URL));
+      if (alive && typeof total === "number") setGlobalGames(total);
+    })();
+    return () => { alive = false; };
+  }, []);
   const recordedRef = useRef(false);
   const announcedRef = useRef(false);
   const [undoSnap, setUndoSnap] = useState(null);
@@ -1273,6 +1287,10 @@ export default function Fahtzee() {
   // ---------- Setup screen ----------
   if (phase === "setup") {
     const namedCount = nameInputs.filter((n) => n.trim()).length;
+    const worldwide =
+      globalGames === null ? null
+      : globalGames === 1 ? "One game played worldwide. A start."
+      : `${globalGames.toLocaleString()} games played worldwide`;
     return shell(
       <>
         <p style={{ color: T.sub60, margin: "4px 0 24px", fontSize: 14, maxWidth: "calc(100% - 120px)", textAlign: "center" }}>
@@ -1294,6 +1312,11 @@ export default function Fahtzee() {
             {VERSION}
           </button>
         </p>
+        {worldwide && (
+          <p style={{ color: T.sub45, margin: "-16px 0 22px", fontSize: 12.5, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+            {worldwide}
+          </p>
+        )}
         {savedGame && (
           <div
             style={{

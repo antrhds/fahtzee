@@ -1,6 +1,10 @@
 // Fahtzee constants
 export const VERSION = "v2.10";
 
+// Global games counter (worker/counter.js). Empty string turns the whole thing
+// off: no requests, no line in the lobby, nothing to go wrong.
+export const COUNTER_URL = "";
+
 // ---------- Colour choices ----------
 export const COLOUR_CHOICES = [
   { name: "Red", hex: "#FF5A5F" },

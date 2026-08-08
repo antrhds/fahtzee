@@ -26,8 +26,15 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
+// Cross-origin GETs we are happy to cache: the fonts, so they survive offline.
+// Everything else off-site — notably the games counter — goes straight to the
+// network, because a cached counter read would freeze the number forever.
+const CACHEABLE_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin && !CACHEABLE_HOSTS.includes(url.hostname)) return;
   const isPage = e.request.mode === "navigate" || e.request.destination === "document";
 
   if (isPage) {

@@ -90,8 +90,55 @@ export const recordGame = (game) =>
     const t = loadTally();
     tallyAdd(t, game);
     window.localStorage.setItem(TALLY_KEY, JSON.stringify(t));
+    queueGameTick();
     return true;
   }, false);
+
+// ---------- Global games counter ----------
+// One anonymous tick per finished game: no names, no scores, no identifiers.
+// Ticks are queued locally so a game finished offline still counts later.
+const TICKS_KEY = "fahtzee-pending-ticks";
+const pendingTicks = () =>
+  safe(() => parseInt(window.localStorage.getItem(TICKS_KEY) || "0", 10) || 0, 0);
+const setPendingTicks = (n) =>
+  safe(() => { window.localStorage.setItem(TICKS_KEY, String(Math.max(0, n))); return true; }, false);
+
+export const queueGameTick = () => setPendingTicks(pendingTicks() + 1);
+
+// Sends whatever is queued and returns the new global total, or null if the
+// counter is switched off, there is nothing to send, or the network is away.
+export const flushGameTicks = async (url) => {
+  if (!url) return null;
+  const queued = pendingTicks();
+  if (queued < 1) return null;
+  const sending = Math.min(queued, 20);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ n: sending }),
+      keepalive: true,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    setPendingTicks(queued - sending); // only clear what was accepted
+    return typeof data.games === "number" ? data.games : null;
+  } catch {
+    return null; // still queued, try again next time
+  }
+};
+
+export const fetchGameTotal = async (url) => {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data.games === "number" ? data.games : null;
+  } catch {
+    return null;
+  }
+};
 
 const GAME_KEY = "fahtzee-current-game";
 export const saveCurrentGame = (state) =>
