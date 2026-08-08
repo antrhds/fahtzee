@@ -354,17 +354,6 @@ const BoltIcon = ({ size = 20 }) => (
     />
   </svg>
 );
-const StarbirdIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      d="M12 1.8 14.1 9.9 22.2 12 14.1 14.1 12 22.2 9.9 14.1 1.8 12 9.9 9.9Z"
-      fill="#DB4E1B"
-      stroke="#3F454C"
-      strokeWidth="1.1"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 const ChipIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <circle cx="12" cy="12" r="9.2" fill="#8B1E26" stroke="#C9A85A" strokeWidth="1.6" />
@@ -1147,7 +1136,7 @@ export default function Fahtzee() {
       </h1>
       <button
         onClick={cycleSkin}
-        aria-label="Change skin: Classic dark, Classic light, Tabletop, Neon, or Casino"
+        aria-label="Change skin: Classic dark, Classic light, Tabletop, Neon, Casino, or The Resistance"
         style={{
           position: "fixed",
           top: 14,
@@ -1165,7 +1154,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <StarbirdIcon size={22} /> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>✨</span> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
