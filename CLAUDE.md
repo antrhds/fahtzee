@@ -137,13 +137,13 @@ happened.
 
 ## 4. Conventions and gotchas learned the hard way
 
-**Skins.** Five: `dark`, `light`, `tabletop`, `neon`, `casino`, cycled in that order by
+**Skins.** Six: `dark`, `light`, `tabletop`, `neon`, `casino`, `resistance`, cycled in that order by
 the corner button and persisted in localStorage under `fahtzee-skin`. The button shows
 the *next* skin's icon, not the current one. `T` is a module level variable reassigned
 each render to `THEMES[skin]`. Themes carry not just colours but construction tokens:
 `cardBorder`, `cardShadow`, `dieBorder`, `dieFace`, `diePip`, `dieColours`, `colourGlow`,
-`btnBorder`, `btnShadow`, `btnCase`, `btn`, `font`, `displayFont`, `wordmark`,
-`wordmarkShadow`, `overlay`, `placeholder`, `sectionText`. **Every skin must define every token** — a missing one is
+`held`, `rosterBand`, `btnBorder`, `btnShadow`, `btnCase`, `btn`, `font`, `displayFont`,
+`wordmark`, `wordmarkShadow`, `overlay`, `placeholder`, `sectionText`. **Every skin must define every token** — a missing one is
 `undefined`, not a fallback. (The one conditional token is `wordmarkShadow`, read only
 when `wordmark` is set; dark and light leave `wordmark` null and use a gradient instead.) Tabletop has its own full playing screen layout (a separate
 `if (skin === "tabletop")` branch before the Classic return) with a scoreboard plaque, a
@@ -153,8 +153,8 @@ strings** — doing so once made the THEMES object self referential and crashed 
 
 **Add capability as a token, not a branch.** When a skin needs something the tokens
 cannot express, add a token and set it for all five, rather than an `if (skin === ...)`
-inside a component. `dieFace`, `diePip`, `displayFont`, `wordmarkShadow`, `dieColours`
-and `colourGlow` were all added this way. The moment themes stop being data, they stop being safe to edit.
+inside a component. `dieFace`, `diePip`, `displayFont`, `wordmarkShadow`, `dieColours`,
+`colourGlow`, `held` and `rosterBand` were all added this way. The moment themes stop being data, they stop being safe to edit.
 
 **Fonts.** Tabletop uses Baloo 2, Neon uses Audiowide, both from Google Fonts in a single
 request, loaded non blocking (`media="print" onload="this.media='all'"`) with a
@@ -176,7 +176,15 @@ colour the picker does not offer. Every display read goes through `skinColour()`
 three places that write or compare the stored hex (roster creation, the taken-colour set,
 the bot's colour) deliberately do not. `test/dice-colours.js` guards this.
 
-Held dice are hardcoded gold in every skin.
+**Held dice** are painted by three things at once — a 3px border, a 4px ring and
+the gradient face used when a die has no player colour — all read from the `held`
+token. The five older skins share one HELD_GOLD object so they cannot drift;
+Resistance clamps in ink because gold made a third warm colour on bone.
+
+**`rosterBand`** paints a panel behind the lobby's name rows. `null` for every
+skin but Resistance, which insets them into slate. If you touch the lobby, check
+the gap between name inputs is still 14px in all six: the rows are wrapped in a
+flex child, and it is easy to shift the spacing everywhere without noticing.
 
 **Responsive.** Tony's phone is ~360 CSS px. Flex children holding inputs need
 `minWidth: 0` or they overflow. Tabletop board dice are sized from `window.innerWidth`,

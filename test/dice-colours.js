@@ -18,6 +18,7 @@ const EXPECTED = {
   tabletop: "rgb(255, 90, 95)",
   casino: "rgb(255, 90, 95)",
   neon: "rgb(255, 46, 99)", // #FF2E63, the neon-tuned red
+  resistance: "rgb(192, 73, 43)", // #C0492B, rust
 };
 
 const savedGame = () => ({

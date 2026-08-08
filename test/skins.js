@@ -9,7 +9,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
-const SKINS = ["dark", "light", "tabletop", "neon", "casino"];
+const SKINS = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
 const PAGE = "file://" + path.join(__dirname, "..", "index.html");
 
 const findChromium = () => {
