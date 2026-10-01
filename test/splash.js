@@ -30,7 +30,7 @@ const splashCount = (page) => page.locator("[data-splash]").count();
     window.__clips = 0;
     const start = AudioBufferSourceNode.prototype.start;
     AudioBufferSourceNode.prototype.start = function (...a) {
-      window.__clips++;
+      if (this.buffer && this.buffer.duration > 1) window.__clips++; // not the 1-sample unlock blip
       return start.apply(this, a);
     };
   };
@@ -62,29 +62,59 @@ const splashCount = (page) => page.locator("[data-splash]").count();
   await page.waitForTimeout(5500);
   check("still waiting after 6.7s untouched", (await state(page)) === "waiting");
 
-  // 2. The tap starts the animation and the soundtrack, without reaching the lobby
+  // 2. Pressing alone must not start it. Phones only grant sound once the
+  //    finger lifts, so a touch-down start is silent on a real phone (v2.12's
+  //    bug, which desktop test browsers do not reproduce). Hold this line.
+  await page.mouse.move(180, 400);
+  await page.mouse.down();
+  await page.waitForTimeout(300);
+  check("pressing alone does not start it (sound needs the lift)", (await state(page)) === "waiting");
+  await page.mouse.up();
+  await page.waitForTimeout(700);
+  check("the completed tap starts it", (await state(page)) === "playing");
+  await ctx.close();
+
+  // 3. On a touchscreen: the tap starts the animation and the soundtrack,
+  //    with the audio actually running, and nothing reaches the lobby
+  ctx = await browser.newContext({ ...VIEW, hasTouch: true, isMobile: true });
+  page = await ctx.newPage();
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(countAudio);
+  await page.addInitScript(() => {
+    const A = window.AudioContext;
+    window.__ctxs = [];
+    window.AudioContext = class extends A {
+      constructor(...a) {
+        super(...a);
+        window.__ctxs.push(this);
+      }
+    };
+  });
+  await page.goto(PAGE);
+  await page.waitForTimeout(800);
   const before = await page.evaluate(() => document.activeElement && document.activeElement.tagName);
-  await page.mouse.click(180, 400);
+  await page.tap("[data-splash]");
   await page.waitForTimeout(700);
   check("a tap starts the animation", (await state(page)) === "playing");
   check("the same tap starts the soundtrack", (await page.evaluate(() => window.__clips)) === 1);
+  check("the audio is actually running", (await page.evaluate(() => window.__ctxs.map((c) => c.state).join())) === "running");
   const after = await page.evaluate(() => document.activeElement && document.activeElement.tagName);
   check("the tap does not land on the lobby", before === after, `${before} -> ${after}`);
 
-  // 3. A second tap skips the rest
-  await page.mouse.click(180, 400);
+  // 4. A second tap skips the rest
+  await page.tap("[data-splash]");
   await page.waitForTimeout(650);
   check("a second tap skips it", (await splashCount(page)) === 0);
   check("the lobby is there underneath", /v2\.\d+/.test(await page.textContent("#root")));
 
-  // 4. Same session: not again
+  // 5. Same session: not again
   await page.reload();
   await page.waitForTimeout(500);
   check("does not play again in the same session", (await splashCount(page)) === 0);
   check("no page errors", errors.length === 0, errors.join(" | ").slice(0, 200));
   await ctx.close();
 
-  // 5. Tapped once and left alone, it finishes and leaves by itself
+  // 6. Tapped once and left alone, it finishes and leaves by itself
   ctx = await browser.newContext(VIEW);
   page = await ctx.newPage();
   await page.goto(PAGE);
@@ -96,7 +126,7 @@ const splashCount = (page) => page.locator("[data-splash]").count();
   check("gone by itself 5.3s after the tap", (await splashCount(page)) === 0);
   await ctx.close();
 
-  // 6. Reduced motion: never shown
+  // 7. Reduced motion: never shown
   ctx = await browser.newContext({ ...VIEW, reducedMotion: "reduce" });
   page = await ctx.newPage();
   await page.goto(PAGE);

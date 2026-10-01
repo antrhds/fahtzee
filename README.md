@@ -58,6 +58,8 @@ There is only one: no arguing with the dice. They cannot hear you and they do no
 
 ## Version history
 
+**v2.13** The splash soundtrack now actually plays on phones. It was listening for your finger to touch the screen, and phones only allow sound once the finger lifts, so v2.12 had a soundtrack that only a desktop mouse ever heard
+
 **v2.12** The splash now waits on a Tap to play card, and that tap brings the sound: a riser, a crash, a chord and the dice landing on the beat. Phones will not make a noise until you have touched them, so we asked nicely first
 
 **v2.11** The game now opens with a five second splash: one pip becomes a die, the die becomes five, and the five land as a Fahtzee, because every session should start with a win, even a fictional one. Once per session, and a tap skips it for anyone who has seen it before and is not impressed

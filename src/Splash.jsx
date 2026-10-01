@@ -113,7 +113,9 @@ export default function Splash() {
       role="button"
       aria-label={waiting ? "Fahtzee. Tap to play." : "Fahtzee intro. Tap to skip."}
       data-splash={state}
-      onPointerDown={tap}
+      // onClick, not onPointerDown: a phone only allows sound once the finger
+      // lifts, so starting on touch-down left the soundtrack silent (v2.12)
+      onClick={tap}
       style={{
         position: "fixed",
         inset: 0,
