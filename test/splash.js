@@ -1,5 +1,6 @@
-// The opening splash: plays once per session, skips on a tap, gets out of the
-// way by itself, and never plays for people who have asked for less motion.
+// The opening splash: once per session it waits on a Tap to play card, that
+// tap starts the animation and its soundtrack, a second tap skips, it leaves
+// by itself when done, and it never shows for people who asked for less motion.
 //   node test/splash.js
 // Playwright against the built index.html, at Tony's phone size.
 const { chromium } = require("playwright");
@@ -24,19 +25,30 @@ const splashCount = (page) => page.locator("[data-splash]").count();
 (async () => {
   const exe = findChromium();
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
+  // Count soundtrack starts, so we can tell the tap really switched the sound on
+  const countAudio = () => {
+    window.__clips = 0;
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (...a) {
+      window.__clips++;
+      return start.apply(this, a);
+    };
+  };
+  const state = (page) => page.getAttribute("[data-splash]", "data-splash");
 
-  // 1. First visit: it plays, it draws, it fits the screen
+  // 1. First visit: the still card, and it waits for a tap however long it takes
   let ctx = await browser.newContext(VIEW);
   let page = await ctx.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(countAudio);
   await page.goto(PAGE);
   await page.waitForTimeout(1200);
-  check("plays on the first visit", (await splashCount(page)) === 1);
+  check("opens on the still card", (await state(page)) === "waiting");
+  check("the card says Tap to play", /tap to play/i.test(await page.textContent("[data-splash]")));
   const colours = await page.evaluate(() => {
     const c = document.querySelector("[data-splash] canvas");
-    const g = c.getContext("2d");
-    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
     const seen = new Set();
     for (let i = 0; i < d.length; i += 4 * 97) seen.add((d[i] >> 4) + "," + (d[i + 1] >> 4) + "," + (d[i + 2] >> 4));
     return seen.size;
@@ -46,34 +58,45 @@ const splashCount = (page) => page.locator("[data-splash]").count();
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   );
   check("no horizontal overflow at 360px", !overflow);
+  check("no sound before the tap", (await page.evaluate(() => window.__clips)) === 0);
+  await page.waitForTimeout(5500);
+  check("still waiting after 6.7s untouched", (await state(page)) === "waiting");
 
-  // 2. A tap skips it, and the tap does not fall through to the lobby
+  // 2. The tap starts the animation and the soundtrack, without reaching the lobby
   const before = await page.evaluate(() => document.activeElement && document.activeElement.tagName);
   await page.mouse.click(180, 400);
-  await page.waitForTimeout(650);
-  check("a tap skips it", (await splashCount(page)) === 0);
+  await page.waitForTimeout(700);
+  check("a tap starts the animation", (await state(page)) === "playing");
+  check("the same tap starts the soundtrack", (await page.evaluate(() => window.__clips)) === 1);
   const after = await page.evaluate(() => document.activeElement && document.activeElement.tagName);
-  check("the skipping tap does not land on the lobby", before === after, `${before} -> ${after}`);
+  check("the tap does not land on the lobby", before === after, `${before} -> ${after}`);
+
+  // 3. A second tap skips the rest
+  await page.mouse.click(180, 400);
+  await page.waitForTimeout(650);
+  check("a second tap skips it", (await splashCount(page)) === 0);
   check("the lobby is there underneath", /v2\.\d+/.test(await page.textContent("#root")));
 
-  // 3. Same session: not again
+  // 4. Same session: not again
   await page.reload();
   await page.waitForTimeout(500);
   check("does not play again in the same session", (await splashCount(page)) === 0);
   check("no page errors", errors.length === 0, errors.join(" | ").slice(0, 200));
   await ctx.close();
 
-  // 4. Left alone, it finishes and leaves by itself
+  // 5. Tapped once and left alone, it finishes and leaves by itself
   ctx = await browser.newContext(VIEW);
   page = await ctx.newPage();
   await page.goto(PAGE);
-  await page.waitForTimeout(4000);
-  check("still playing at 4s", (await splashCount(page)) === 1);
-  await page.waitForTimeout(2600);
-  check("gone by itself by 6.6s", (await splashCount(page)) === 0);
+  await page.waitForTimeout(600);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(3000);
+  check("a key works as the tap, and it is still playing 3s in", (await state(page)) === "playing");
+  await page.waitForTimeout(2300);
+  check("gone by itself 5.3s after the tap", (await splashCount(page)) === 0);
   await ctx.close();
 
-  // 5. Reduced motion: never shown
+  // 6. Reduced motion: never shown
   ctx = await browser.newContext({ ...VIEW, reducedMotion: "reduce" });
   page = await ctx.newPage();
   await page.goto(PAGE);

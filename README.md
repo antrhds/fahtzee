@@ -40,7 +40,7 @@ The Stats panel keeps a lifetime ledger on the device: wins, win percentage, gam
 
 The game has six skins, cycled from the button in the corner and remembered between visits. Classic Dark is arcade at night. Classic Light is for the garden. Tabletop turns the whole thing into a board game: terracotta table, cream panels with thick charcoal outlines, a scoreboard plaque with everyone's totals up top, big outlined dice sitting on a proper board, and a scorecard laid out as tiles. Neon is the actual arcade: black, cyan and magenta, everything faintly glowing, a wordmark that thinks it is a cabinet, and dice that glow in whatever colour you chose. Casino is a green baize table with gold hairlines and red felt, which is as close as this game gets to a dinner jacket. And The Resistance is the briefing room: bone, slate and squadron orange, dice in dusty modelling-paint colours, and a scorecard that looks like it has been filled in before. Same game, different furniture. The speaker button below silences the lot, for church.
 
-The first time you open the game in a session it plays a short splash: a pip, a die, five dice, a Fahtzee, and the tagline. It is drawn live rather than played from a video, so it costs the download almost nothing and looks sharp on any screen. Tap anywhere to skip it, and it stays away if your phone is set to reduce motion.
+The first time you open the game in a session it greets you with a red die and a Tap to play. Tap, and the die bursts into five, they land as a Fahtzee, and the tagline settles, all to its own soundtrack. The pictures are drawn live rather than played from a video, so they look sharp on any screen, and the music is a few seconds synthesised from scratch and tucked inside the game, so it works offline too. Tap again to skip it, the speaker button still silences everything once you are in, and it stays away entirely if your phone is set to reduce motion.
 
 ## Bring your own sounds
 
@@ -57,6 +57,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.12** The splash now waits on a Tap to play card, and that tap brings the sound: a riser, a crash, a chord and the dice landing on the beat. Phones will not make a noise until you have touched them, so we asked nicely first
 
 **v2.11** The game now opens with a five second splash: one pip becomes a die, the die becomes five, and the five land as a Fahtzee, because every session should start with a win, even a fictional one. Once per session, and a tap skips it for anyone who has seen it before and is not impressed
 

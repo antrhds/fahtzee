@@ -31,8 +31,12 @@ src/
   ai.js        botChooseHolds / botChooseCategory / botShouldStop, levels 0/1/2, sleep
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
-  splash.js    The 5s opening splash, drawn live on a canvas; every frame is a pure f(t)
-  Splash.jsx   Overlay that plays it once per session (sessionStorage), tap or key to skip
+  splash.js    The opening splash, drawn live on a canvas; every frame is a pure f(t)
+  Splash.jsx   Once per session (sessionStorage): a Tap to play card, whose tap starts
+               the animation AND its soundtrack (phones need a tap for sound); 2nd tap skips
+  splash-audio.js  GENERATED soundtrack (base64 MP3, ~57 KB): never hand edit
+tools/
+  splash-score.py  Synthesises the soundtrack and writes src/splash-audio.js (numpy + ffmpeg)
 ```
 
 `index.html` is the bundle. It contains all of React plus the whole game inlined in a
@@ -93,8 +97,9 @@ test/skins.js     Every skin renders at 360px with no page errors and no
                   horizontal overflow. Playwright.
 test/dice-colours.js  Per-skin die colours are a render-time remap only: the
                   stored hex must survive every skin. Playwright.
-test/splash.js    The splash plays once per session, skips on a tap without the
-                  tap reaching the lobby, leaves by itself, honours reduced motion.
+test/splash.js    The splash waits on its card, the tap starts animation and sound
+                  without reaching the lobby, a second tap skips, it leaves by
+                  itself, it plays once per session, honours reduced motion.
                   The other suites seed sessionStorage `fahtzee-splash-seen` so
                   they start in the lobby; do the same in any new test.
 ```

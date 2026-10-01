@@ -9,6 +9,7 @@
 import { COLOUR_CHOICES, PIP_LAYOUTS } from "./constants.js";
 
 export const SPLASH_LENGTH = 5.0; // seconds, then it holds and fades
+export const TAP_AT = 1.45; // the moment the still card holds; the tap resumes from here
 
 const hex = Object.fromEntries(COLOUR_CHOICES.map((c) => [c.name.toLowerCase(), c.hex]));
 const PAL = [hex.red, hex.orange, hex.yellow, hex.green, hex.blue, hex.purple];
@@ -264,13 +265,18 @@ export function createSplash(canvas) {
     }
   }
 
-  // 0–1.5s: a pip, then three, then five; an outline draws round them and fills
-  function intro(t) {
+  // 0–1.5s: a pip, then three, then five; an outline draws round them and fills.
+  // While waiting for the tap (idle = seconds spent waiting) it holds on the
+  // finished die, breathing, with a soft ring every two seconds.
+  function intro(t, idle = null) {
     const [sx, sy] = shake(t); ST(1, 0, 0, 1, sx, sy);
-    for (const b of [0.05, 0.5, 1.0]) ring(CX, CY, b, t, 1.3, 120, 1000, 3, "rgba(255,255,255,0.35)");
+    if (idle === null) for (const b of [0.05, 0.5, 1.0]) ring(CX, CY, b, t, 1.3, 120, 1000, 3, "rgba(255,255,255,0.35)");
+    else ring(CX, CY, Math.floor(idle / 2) * 2, idle, 1.8, 200, 900, 3, "rgba(255,255,255,0.22)");
     const h = 180, red = rgbOf(hex.red), lum = faceLum([0, 0, -1]), pipEnd = pipFor(hex.red);
     const fillP = E.outExpo(inv(1.14, 1.4, t)), drawP = E.inOutCubic(inv(0.18, 1.12, t));
-    const pulse = 0.035 * [0.5, 1.0].reduce((s, b) => s + (t > b ? Math.exp(-(t - b) * 9) * Math.sin((t - b) * 22) : 0), 0);
+    const pulse = idle !== null
+      ? 0.02 * Math.sin(idle * Math.PI) * Math.min(1, idle)
+      : 0.035 * [0.5, 1.0].reduce((s, b) => s + (t > b ? Math.exp(-(t - b) * 9) * Math.sin((t - b) * 22) : 0), 0);
     g.translate(CX, CY); g.scale(1 + pulse, 1 + pulse);
     const path = (pts) => { g.beginPath(); pts.forEach(([A, B], i) => (i ? g.lineTo(A * h, B * h) : g.moveTo(A * h, B * h))); g.closePath(); };
     if (fillP > 0) {
@@ -396,16 +402,28 @@ export function createSplash(canvas) {
     flash(t, BOOM, 0.4, 0.95);
   }
 
-  function draw(t) {
+  // bgShift keeps the drifting background continuous across the tap
+  function draw(t, bgShift = 0) {
     g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
-    background(t);
+    background(t + bgShift);
     if (t < 1.5) intro(t);
     else finale(t);
+    vignette();
+  }
+  function vignette() {
     ST(1, 0, 0, 1, 0, 0);
     const vg = g.createRadialGradient(CX, CY, Math.min(W, H) * 0.45, CX, CY, Math.max(W, H) * 0.65);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.5)");
     g.fillStyle = vg; g.fillRect(0, 0, W, H);
   }
 
-  return { resize, draw };
+  // The still card shown until the first tap: the finished die from the intro
+  function drawIdle(idle) {
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+    background(idle);
+    intro(TAP_AT, idle);
+    vignette();
+  }
+
+  return { resize, draw, drawIdle };
 }
