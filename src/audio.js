@@ -182,13 +182,26 @@ const playSample = (name) => {
 };
 
 // A whole recorded clip (the splash soundtrack), handed over as base64 MP3.
-// Call it from inside a tap: that is what lets a phone make sound at all.
+// Call it from a click (or key) handler, never pointerdown/touchstart: phones
+// only grant sound once the finger lifts, so a touch-down handler is silent.
 // Resolves with a stop() once the clip is actually playing, or null if it
 // cannot play (no audio, muted, or the decode failed) so callers carry on silently.
 export const playClip = async (b64, volume = 0.8) => {
   if (!soundEnabled) return null;
   const ctx = getCtx();
   if (!ctx) return null;
+  // Start a silent blip synchronously, still inside the tap: iPhones only
+  // unlock Web Audio for good when something actually plays in the gesture.
+  try {
+    const blip = ctx.createBufferSource();
+    blip.buffer = ctx.createBuffer(1, 1, 22050);
+    blip.connect(ctx.destination);
+    blip.start(0);
+  } catch {}
+  try {
+    if (ctx.state !== "running") await ctx.resume();
+  } catch {}
+  if (ctx.state !== "running") return null;
   try {
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     const buf = await ctx.decodeAudioData(bytes.buffer);

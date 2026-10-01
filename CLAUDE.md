@@ -219,7 +219,12 @@ respect the same line.
 **Sounds.** Synthesised in Web Audio, no assets. If a `sounds/` folder exists with
 `roll1..3`, `hold`, `bank`, `fahtzee`, `win` (mp3/m4a/wav) those override the synth.
 Speech uses the device engine; it does not work in sandboxed previews, only on the real
-site. Same for shake to roll (needs HTTPS + real device motion).
+site.
+**Sound needs the finger to lift.** Start audio from `onClick` (or a key), never
+`onPointerDown`/`touchstart`: phones grant sound permission on touch end, so a touch-down
+handler is silent on a real phone. Desktop test browsers grant it on touch-down too, so
+they cannot catch this; `test/splash.js` instead asserts a press alone does nothing.
+v2.12 shipped a silent splash this way. Same for shake to roll (needs HTTPS + real device motion).
 
 **iOS.** `purgeUndoStack()` defuses Apple's shake to undo dialogue. Do not remove it.
 
