@@ -28,6 +28,7 @@ const boot = (seed, width = 360) =>
       url: "https://example.com/",
       beforeParse(w) {
         Object.defineProperty(w, "innerWidth", { value: width, configurable: true });
+        w.sessionStorage.setItem("fahtzee-splash-seen", "1"); // splash is covered by test/splash.js
         seed(w);
       },
     });
