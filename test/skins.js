@@ -27,7 +27,10 @@ const findChromium = () => {
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
-    await page.addInitScript((s) => localStorage.setItem("fahtzee-skin", s), skin);
+    await page.addInitScript((s) => {
+      localStorage.setItem("fahtzee-skin", s);
+      sessionStorage.setItem("fahtzee-splash-seen", "1"); // splash is covered by test/splash.js
+    }, skin);
     await page.goto(PAGE);
     await page.waitForTimeout(700);
 

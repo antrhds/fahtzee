@@ -20,9 +20,9 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
-entry.jsx                  Build entry point: mounts src/App.jsx into #root
+entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
   App.jsx      (~2340 lines) All UI: themes, icons, Die, Confetti, screens, game flow
   constants.js VERSION string, COLOUR_CHOICES, PIP_LAYOUTS
@@ -31,6 +31,8 @@ src/
   ai.js        botChooseHolds / botChooseCategory / botShouldStop, levels 0/1/2, sleep
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
+  splash.js    The 5s opening splash, drawn live on a canvas; every frame is a pure f(t)
+  Splash.jsx   Overlay that plays it once per session (sessionStorage), tap or key to skip
 ```
 
 `index.html` is the bundle. It contains all of React plus the whole game inlined in a
@@ -91,6 +93,10 @@ test/skins.js     Every skin renders at 360px with no page errors and no
                   horizontal overflow. Playwright.
 test/dice-colours.js  Per-skin die colours are a render-time remap only: the
                   stored hex must survive every skin. Playwright.
+test/splash.js    The splash plays once per session, skips on a tap without the
+                  tap reaching the lobby, leaves by itself, honours reduced motion.
+                  The other suites seed sessionStorage `fahtzee-splash-seen` so
+                  they start in the lobby; do the same in any new test.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it

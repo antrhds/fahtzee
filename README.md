@@ -40,13 +40,15 @@ The Stats panel keeps a lifetime ledger on the device: wins, win percentage, gam
 
 The game has six skins, cycled from the button in the corner and remembered between visits. Classic Dark is arcade at night. Classic Light is for the garden. Tabletop turns the whole thing into a board game: terracotta table, cream panels with thick charcoal outlines, a scoreboard plaque with everyone's totals up top, big outlined dice sitting on a proper board, and a scorecard laid out as tiles. Neon is the actual arcade: black, cyan and magenta, everything faintly glowing, a wordmark that thinks it is a cabinet, and dice that glow in whatever colour you chose. Casino is a green baize table with gold hairlines and red felt, which is as close as this game gets to a dinner jacket. And The Resistance is the briefing room: bone, slate and squadron orange, dice in dusty modelling-paint colours, and a scorecard that looks like it has been filled in before. Same game, different furniture. The speaker button below silences the lot, for church.
 
+The first time you open the game in a session it plays a short splash: a pip, a die, five dice, a Fahtzee, and the tagline. It is drawn live rather than played from a video, so it costs the download almost nothing and looks sharp on any screen. Tap anywhere to skip it, and it stays away if your phone is set to reduce motion.
+
 ## Bring your own sounds
 
 Fancy the game sounding like your actual dice on your actual table? Record them and drop the files into a `sounds` folder in this repo: `roll1`, `roll2`, `roll3` for roll variations, plus `hold`, `bank`, `fahtzee` and `win`, in mp3, m4a or wav. The game finds them automatically. Anything missing falls back to the synth. The Fahtzee voice speaks regardless. That is not configurable. It is the soul of the game.
 
 ## The tech bit
 
-Three files: the game (React, bundled, minified, no build step, no server), a web app manifest so it installs like a real app, and a service worker that caches everything for offline play while always fetching the freshest version when you are online. We learned that second part the hard way. Sounds are synthesised live in the browser unless you supply recordings, the voice comes from the device's own speech engine, and games and stats live in local storage on the phone. These very words are fetched live from the repo when you tap the version number, so the notes in the app are never out of date. Under the surface the code is split into proper modules: game logic, audio, the AI's brain, the announcer's script, storage, and the app itself.
+Three files: the game (React, bundled, minified, no build step, no server), a web app manifest so it installs like a real app, and a service worker that caches everything for offline play while always fetching the freshest version when you are online. We learned that second part the hard way. Sounds are synthesised live in the browser unless you supply recordings, the voice comes from the device's own speech engine, and games and stats live in local storage on the phone. These very words are fetched live from the repo when you tap the version number, so the notes in the app are never out of date. Under the surface the code is split into proper modules: game logic, audio, the AI's brain, the announcer's script, storage, the opening splash, and the app itself.
 
 Shake to roll uses the device motion sensors, which browsers only allow over HTTPS. iPhones ask permission once with a small button under the roll button, and the game quietly defuses Apple's shake to undo dialogue so your roll is just a roll. That is Apple being Apple, twice.
 
@@ -55,6 +57,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.11** The game now opens with a five second splash: one pip becomes a die, the die becomes five, and the five land as a Fahtzee, because every session should start with a win, even a fictional one. Once per session, and a tap skips it for anyone who has seen it before and is not impressed
 
 **v2.10** A sixth skin, The Resistance: bone and slate and a burnt orange that only ever means "press this", with the dice repainted in modelling-paint colours so they look like they have seen a hangar. Held dice now clamp in whatever colour suits the skin rather than gold in all weathers
 

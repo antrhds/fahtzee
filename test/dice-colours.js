@@ -57,6 +57,7 @@ const check = (label, ok, detail) => {
       ([g, s]) => {
         localStorage.setItem("fahtzee-skin", s);
         localStorage.setItem("fahtzee-current-game", JSON.stringify(g));
+        sessionStorage.setItem("fahtzee-splash-seen", "1"); // splash is covered by test/splash.js
       },
       [savedGame(), skin]
     );
