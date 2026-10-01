@@ -1,7 +1,7 @@
-// Fahtzee service worker v2.11
+// Fahtzee service worker v2.12
 // Pages: network first WITH A TIMEOUT — fresh when the network is healthy,
 // instant cached copy when it is slow or absent. Assets: cache first.
-const CACHE = "fahtzee-v2-11";
+const CACHE = "fahtzee-v2-12";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 const NETWORK_TIMEOUT_MS = 3500;
 

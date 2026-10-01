@@ -181,6 +181,32 @@ const playSample = (name) => {
   } catch { return false; }
 };
 
+// A whole recorded clip (the splash soundtrack), handed over as base64 MP3.
+// Call it from inside a tap: that is what lets a phone make sound at all.
+// Resolves with a stop() once the clip is actually playing, or null if it
+// cannot play (no audio, muted, or the decode failed) so callers carry on silently.
+export const playClip = async (b64, volume = 0.8) => {
+  if (!soundEnabled) return null;
+  const ctx = getCtx();
+  if (!ctx) return null;
+  try {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const buf = await ctx.decodeAudioData(bytes.buffer);
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    g.gain.value = volume;
+    src.connect(g).connect(ctx.destination);
+    src.start();
+    return () => {
+      try {
+        g.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
+        src.stop(ctx.currentTime + 0.4);
+      } catch {}
+    };
+  } catch { return null; }
+};
+
 let soundEnabled = true;
 export const setSoundEnabled = (on) => { soundEnabled = on; };
 export const play = (name) => { if (!soundEnabled) return; if (playSample(name)) return; try { SFX[name](); } catch {} };
