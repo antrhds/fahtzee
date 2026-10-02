@@ -35,6 +35,45 @@ const tone = (ctx, freq, start, dur, type = "triangle", vol = 0.12) => {
   o.start(ctx.currentTime + start);
   o.stop(ctx.currentTime + start + dur + 0.05);
 };
+// A small kit for the milestone scores: noise bursts and notes on one master
+// gain, all scheduled from the same t0, so hushMilestone() can fade the lot.
+const scoreKit = () => {
+  const ctx = getCtx(); if (!ctx) return null;
+  const out = ctx.createGain();
+  out.gain.value = 0.9;
+  out.connect(ctx.destination);
+  _milestoneOut = out;
+  const t0 = ctx.currentTime;
+  const noise = (when, dur, freq, q, vol, type = "bandpass") => {
+    const buf = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * dur), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t0 + when);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
+    src.connect(f).connect(g).connect(out);
+    src.start(t0 + when);
+  };
+  const note = (freq, when, dur, type, vol, glide) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0 + when);
+    if (glide) o.frequency.exponentialRampToValueAtTime(glide, t0 + when + dur);
+    g.gain.setValueAtTime(0.0001, t0 + when);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + when + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
+    o.connect(g).connect(out);
+    o.start(t0 + when);
+    o.stop(t0 + when + dur + 0.05);
+  };
+  return { noise, note };
+};
+
 const SFX = {
   rattle: () => {
     const ctx = getCtx(); if (!ctx) return;
@@ -133,39 +172,8 @@ const SFX = {
   // The milestone: a counter ticking up and up, a drum roll on 499, then a slam,
   // a brass chord, a fanfare and fireworks. Timed to src/milestone.js (slam at 2.9s).
   milestone: () => {
-    const ctx = getCtx(); if (!ctx) return;
-    const out = ctx.createGain();
-    out.gain.value = 0.9;
-    out.connect(ctx.destination);
-    _milestoneOut = out;
-    const t0 = ctx.currentTime;
-    const noise = (when, dur, freq, q, vol, type = "bandpass") => {
-      const buf = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * dur), ctx.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      const f = ctx.createBiquadFilter();
-      f.type = type; f.frequency.value = freq; f.Q.value = q;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(vol, t0 + when);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
-      src.connect(f).connect(g).connect(out);
-      src.start(t0 + when);
-    };
-    const note = (freq, when, dur, type, vol, glide) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(freq, t0 + when);
-      if (glide) o.frequency.exponentialRampToValueAtTime(glide, t0 + when + dur);
-      g.gain.setValueAtTime(0.0001, t0 + when);
-      g.gain.exponentialRampToValueAtTime(vol, t0 + when + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
-      o.connect(g).connect(out);
-      o.start(t0 + when);
-      o.stop(t0 + when + dur + 0.05);
-    };
+    const k = scoreKit(); if (!k) return;
+    const { noise, note } = k;
     // The counter: ticks that start quick and slow down, climbing in pitch
     for (let i = 0, t = 0.5; t < 2.45; i++) {
       note(700 + i * 22, t, 0.04, "square", 0.05);
@@ -192,6 +200,28 @@ const SFX = {
       if (i > 2) note(900, w - 0.5, 0.45, "sine", 0.025, 2200);
       noise(w, 0.5, 900, 0.5, 0.35, "lowpass");
       for (let c = 0; c < 6; c++) noise(w + 0.12 + Math.random() * 0.5, 0.02, 4000, 1, 0.12);
+    });
+  },
+  // The AI's milestone: computing bleeps, a rising sweep while it "processes",
+  // a digital crunch at the slam, then a square-wave arpeggio, very pleased with itself.
+  milestoneAI: () => {
+    const k = scoreKit(); if (!k) return;
+    const { noise, note } = k;
+    const scale = [523, 587, 659, 784, 880, 1047, 1175, 1319];
+    for (let t = 0.45; t < 1.95; t += 0.045) note(scale[Math.floor(Math.random() * scale.length)] * 2, t, 0.03, "square", 0.035);
+    note(180, 1.95, 0.95, "sawtooth", 0.06, 1400);
+    note(182, 1.95, 0.95, "square", 0.03, 1410);
+    for (let t = 2.45; t < 2.88; t += 0.04) note(1600, t, 0.02, "square", 0.05);
+    note(90, 2.9, 0.8, "sine", 0.6, 30);
+    noise(2.9, 0.5, 3000, 0.6, 0.4, "highpass");
+    for (let i = 0; i < 10; i++) noise(2.9 + i * 0.03, 0.025, 1200 + i * 400, 4, 0.2);
+    [110, 165, 220, 330, 440].forEach((f) => note(f, 2.92, 1.4, "square", 0.04));
+    [[440, 3.4], [554, 3.5], [659, 3.6], [880, 3.7], [659, 3.8], [880, 3.9], [1109, 4.0], [1319, 4.1]].forEach(([f, w]) => note(f, w, 0.09, "square", 0.06));
+    note(1760, 4.25, 0.7, "square", 0.05);
+    note(880, 4.25, 0.7, "triangle", 0.09);
+    [3.0, 3.14, 3.26, 3.9, 4.3, 4.75, 5.2, 5.6, 6.1, 6.5].forEach((w) => {
+      noise(w, 0.3, 700, 0.5, 0.25, "lowpass");
+      for (let c = 0; c < 5; c++) note(2000 + Math.random() * 2000, w + 0.1 + Math.random() * 0.4, 0.02, "square", 0.03);
     });
   },
 };

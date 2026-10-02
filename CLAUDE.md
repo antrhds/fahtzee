@@ -32,9 +32,12 @@ src/
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
   splash.js    The opening splash, drawn live on a canvas; every frame is a pure f(t)
-  milestone.js The milestone (50/100/250/500/every 500) celebration, drawn live on a canvas; every frame is a pure f(t)
+  milestone.js The milestone (50/100/250/500/every 500) celebration, drawn live on a canvas; every frame is a pure f(t).
+               Two looks on one clock: fireworks for people, drawAI (digit rain, glitch) when only the AI got there
   Milestone.jsx Shows it when App fires the `fahtzee-milestone` window event after recordGame
-               finds a player's lifetime `played` at 50, 100, 250, 500, 1000, ... (isMilestone in lines.js)
+               finds a player's lifetime `played` at 50, 100, 250, 500, 1000, ... (isMilestone in lines.js).
+               The lobby's Badges panel fires the same event with `replay: true` to play one again;
+               badges are derived from `played` (milestonesUpTo), never stored
   Splash.jsx   Once per session (sessionStorage): a Tap to play card, whose tap starts
                the animation AND its soundtrack (phones need a tap for sound); 2nd tap skips
   splash-audio.js  GENERATED soundtrack (base64 MP3, ~57 KB): never hand edit
@@ -105,9 +108,11 @@ test/splash.js    The splash waits on its card, the tap starts animation and sou
                   itself, it plays once per session, honours reduced motion.
                   The other suites seed sessionStorage `fahtzee-splash-seen` so
                   they start in the lobby; do the same in any new test.
-test/milestone.js The 500th game: 499 stays quiet, 500 celebrates after the win lands,
-                  early taps do not skip it, a tap after dismisses it, the AI's own
-                  version, reduced motion. SHOTS=dir saves screenshots. Playwright.
+test/milestone.js Milestones: 499 stays quiet, 500 celebrates after the win lands,
+                  50/100/250/1000 fire and 150/750 do not, early taps do not skip it,
+                  a tap after dismisses it, the AI's own style, reduced motion, and the
+                  lobby's Badges panel in all six skins (counts, replays, empty device).
+                  SHOTS=dir saves screenshots. Playwright.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it

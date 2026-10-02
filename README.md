@@ -42,7 +42,9 @@ The game has six skins, cycled from the button in the corner and remembered betw
 
 The first time you open the game in a session it greets you with a red die and a Tap to play. Tap, and the die bursts into five, they land as a Fahtzee, and the tagline settles, all to its own soundtrack. The pictures are drawn live rather than played from a video, so they look sharp on any screen, and the music is a few seconds synthesised from scratch and tucked inside the game, so it works offline too. Tap again to skip it, the speaker button still silences everything once you are in, and it stays away entirely if your phone is set to reduce motion.
 
-Finish your 50th game and the game notices. Once the result has landed, the screen goes dark, a counter races up through your career and stalls one short just long enough to be rude about it, then 50 slams home in a flash and a shockwave, the dice burst out of it, and the fireworks start and do not stop until you tap. Your lifetime wins, win rate and best ever come up underneath, and the announcer says a few words. It happens again at 100, 250 and 500, then every 500 after that, for anyone who gets there. The AI gets one too, and is insufferable about it.
+Finish your 50th game and the game notices. Once the result has landed, the screen goes dark, a counter races up through your career and stalls one short just long enough to be rude about it, then 50 slams home in a flash and a shockwave, the dice burst out of it, and the fireworks start and do not stop until you tap. Your lifetime wins, win rate and best ever come up underneath, and the announcer says a few words. It happens again at 100, 250 and 500, then every 500 after that, for anyone who gets there. The AI gets its own version, because it would not be seen dead at a fireworks night: a data centre at midnight, digits raining down the screen, a read-out that scrambles, locks on one short and shows a progress bar, then lands with a glitch and a burst of ones and zeroes. It asks you to acknowledge it, not thank it, and it is insufferable either way.
+
+Every milestone leaves a badge in the Badges section at the bottom of the lobby: bronze for 50, silver for 100, gold for 250, amethyst from 500 on, and glowing circuit chips for the AI. Each player's row shows how far off the next one is, and tapping a badge plays its celebration again, for anyone who missed it, was in the kitchen, or simply wants to see it again.
 
 ## Bring your own sounds
 
@@ -59,6 +61,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.15** A Badges section in the lobby, one for every milestone, each of which replays its celebration when tapped. The AI's milestone is now its own thing entirely, with digit rain, a glitch and a progress bar it did not need
 
 **v2.14** Fifty, a hundred, two hundred and fifty or five hundred games gets you a counter, a slam, a shockwave, forty flying dice, fireworks until you tap, and a short speech. Tony was on 499 when this was written, which is either good timing or a cry for help
 
