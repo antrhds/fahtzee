@@ -24,7 +24,7 @@ Phone died mid game? Safari ate the tab? The game saves itself after every singl
 
 ## Fahtzee talks
 
-If you roll five of a kind the phone plays a fanfare and then says the name of the game out loud. You will know it when you hear it.
+If you roll five of a kind the game stops for a cut-scene. Black bars slide in like a cinema, your five dice fly in one at a time in slow motion and thud into a row in your colour, they hop, and FAHTZEE slams in a letter at a time over speed lines while the phone says the name of the game out loud. You will know it when you hear it. Four seconds later the bars slide away and you are back at the table, dice exactly as they fell. Tap to skip it if you are in a hurry, though nobody ever has been. The AI gets one too, and is made to wait until it is over before it scores. Phones set to reduce motion skip the cinema and just get the voice.
 
 The announcer has a script, and it varies. Beat the AI solo and you might be told the machines never stood a chance, or that somewhere a server is sulking. Lose and the commiserations come by name, which is somehow worse. In local play the winner gets the glory and the losers get name checked individually, right down to who is doing the washing up.
 
@@ -61,6 +61,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.16** Rolling a Fahtzee now stops the game for a cut-scene: letterbox bars, five dice flying in slow motion, and the word itself, one letter at a time. The AI gets one too, and waits for it to finish, which is the most patience it has ever shown
 
 **v2.15** A Badges section in the lobby, one for every milestone, each of which replays its celebration when tapped. The AI's milestone is now its own thing entirely, with digit rain, a glitch and a progress bar it did not need
 

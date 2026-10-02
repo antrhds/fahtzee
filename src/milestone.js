@@ -21,11 +21,11 @@ const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
 export const AI_CYAN = "#3CF0FF", AI_GREEN = "#39FF88";
 
 // ---------- maths ----------
-const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const inv = (a, b, x) => clamp((x - a) / (b - a));
-const outCubic = (t) => 1 - Math.pow(1 - t, 3);
-const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
-function rng(seed) {
+export const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+export const inv = (a, b, x) => clamp((x - a) / (b - a));
+export const outCubic = (t) => 1 - Math.pow(1 - t, 3);
+export const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+export function rng(seed) {
   return () => {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -83,7 +83,7 @@ function roundRect(g, x, y, w, h, r) {
   g.closePath();
 }
 
-function drawDie(g, size, face, colour) {
+export function drawDie(g, size, face, colour) {
   const h = size / 2;
   g.fillStyle = "rgba(0,0,0,0.35)";
   roundRect(g, -h, -h + size * 0.08, size, size, size * 0.28);

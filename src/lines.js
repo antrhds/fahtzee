@@ -134,3 +134,19 @@ export const milestonesUpTo = (played) => {
 };
 export const nextMilestone = (played) =>
   [50, 100, 250].find((m) => m > played) || (Math.floor(played / 500) + 1) * 500;
+
+// ---------- The Fahtzee cut-scene ----------
+// Under the word. face is what was rolled (1-6).
+export const FACE_WORDS = ["ones", "twos", "threes", "fours", "fives", "sixes"];
+export const SCENE_SUB = [
+  (f) => `Five ${f}. No arguing with that.`,
+  (f) => `Five ${f}. Somebody check the dice.`,
+  (f) => `Five ${f}. Please clap.`,
+  (f) => `Five ${f}. Act natural.`,
+  (f) => `Five ${f}. The dice have chosen.`,
+];
+export const SCENE_SUB_AI = [
+  (f) => `Five ${f}. As calculated.`,
+  (f) => `Five ${f}. You may applaud.`,
+  (f) => `Five ${f}. It would like that minuted.`,
+];
