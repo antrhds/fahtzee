@@ -4,8 +4,9 @@ import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
 import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
-import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone } from "./lines.js";
+import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone, FACE_WORDS, SCENE_SUB, SCENE_SUB_AI } from "./lines.js";
 import { MILESTONE_EVENT } from "./Milestone.jsx";
+import { SCENE_EVENT, SCENE_DONE, prefersLessMotion } from "./FahtzeeScene.jsx";
 
 // ---------- Themes ----------
 const THEMES = {
@@ -700,6 +701,34 @@ export default function Fahtzee() {
   const hasRolled = rollsLeft < 3;
   const player = players[current];
 
+  // The Fahtzee cut-scene (src/FahtzeeScene.jsx). While it plays, sceneOnRef
+  // holds the AI and the roll; sceneSpokeRef stops the announcer saying it twice.
+  const sceneOnRef = useRef(false);
+  const sceneSpokeRef = useRef(false);
+  useEffect(() => {
+    const done = () => { sceneOnRef.current = false; };
+    window.addEventListener(SCENE_DONE, done);
+    return () => window.removeEventListener(SCENE_DONE, done);
+  }, []);
+  const fahtzeeScene = (face) => {
+    const { players: ps, current: cur } = gameRef.current;
+    const p = ps[cur];
+    if (!p || prefersLessMotion()) return;
+    sceneOnRef.current = true;
+    sceneSpokeRef.current = true;
+    const words = FACE_WORDS[face - 1];
+    try {
+      window.dispatchEvent(new CustomEvent(SCENE_EVENT, { detail: {
+        face,
+        colour: skinColour(p.colour) || "#FFD23F",
+        title: `${p.isBot ? "The AI" : p.name} rolls a`.toUpperCase(),
+        sub: (p.isBot ? pick(SCENE_SUB_AI) : pick(SCENE_SUB))(words),
+      } }));
+    } catch {
+      sceneOnRef.current = false;
+    }
+  };
+
   const doRoll = useCallback(() => {
     play("rattle");
     haptic([12, 25, 10, 30, 8, 40, 6]);
@@ -713,18 +742,23 @@ export default function Fahtzee() {
         setRolling(false);
         return;
       }
-      setDice((prev) => prev.map((d, i) => (held[i] ? d : 1 + Math.floor(Math.random() * 6))));
       ticks++;
-      if (ticks >= 7) {
-        clearInterval(interval);
-        setRolling(false);
-        setRollsLeft((r) => r - 1);
+      if (ticks < 7) {
+        setDice((prev) => prev.map((d, i) => (held[i] ? d : 1 + Math.floor(Math.random() * 6))));
+        return;
       }
+      // The landing: settle the dice, and if they came up five alike, roll the cut-scene
+      clearInterval(interval);
+      const landed = gameRef.current.dice.map((d, i) => (held[i] ? d : 1 + Math.floor(Math.random() * 6)));
+      setDice(landed);
+      setRolling(false);
+      setRollsLeft((r) => r - 1);
+      if (landed.every((d) => d === landed[0]) && held.some((h) => !h)) fahtzeeScene(landed[0]);
     }, 60);
   }, [held]);
 
   const roll = useCallback(() => {
-    if (rollsLeft === 0 || rolling || phase !== "playing") return;
+    if (rollsLeft === 0 || rolling || phase !== "playing" || sceneOnRef.current) return;
     doRoll();
   }, [rollsLeft, rolling, phase, doRoll]);
 
@@ -846,7 +880,9 @@ export default function Fahtzee() {
     const isFahtzeeMoment = (key === "fahtzee" && pts === 50) || bonus > 0;
     play(isFahtzeeMoment ? "fahtzee" : "bank");
     haptic(isFahtzeeMoment ? [30, 50, 30, 50, 90] : 15);
-    if (isFahtzeeMoment) setTimeout(sayFahtzee, 450);
+    // The cut-scene has already said it, if there was one this turn
+    if (isFahtzeeMoment && !sceneSpokeRef.current) setTimeout(sayFahtzee, 450);
+    sceneSpokeRef.current = false;
     // The AI has opinions
     const anyBot = players.some((p) => p.isBot);
     if (player.isBot && pts >= 25 && Math.random() < 0.35) {
@@ -898,7 +934,7 @@ export default function Fahtzee() {
             if (!live()) return;
             rollRef.current();
             await sleep(650);
-            while (gameRef.current.rolling) {
+            while (gameRef.current.rolling || sceneOnRef.current) {
               if (gameIdRef.current !== gid) return;
               await sleep(80);
             }

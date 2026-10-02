@@ -202,6 +202,30 @@ const SFX = {
       for (let c = 0; c < 6; c++) noise(w + 0.12 + Math.random() * 0.5, 0.02, 4000, 1, 0.12);
     });
   },
+  // The Fahtzee cut-scene (src/fahtzee-scene.js): a whoosh and a thud per die as
+  // it lands, a drum hit per letter climbing up the scale, then a crash and a chord.
+  fahtzeeScene: () => {
+    const k = scoreKit(); if (!k) return;
+    const { noise, note } = k;
+    for (let i = 0; i < 5; i++) {
+      const at = 0.3 + i * 0.17;
+      noise(at, 0.4, 900 + i * 200, 0.8, 0.12);
+      note(140, at + 0.42, 0.18, "sine", 0.5, 60);
+      noise(at + 0.42, 0.06, 2500, 1, 0.2);
+    }
+    noise(1.55, 0.2, 600, 0.6, 0.2);
+    [523, 587, 659, 698, 784, 880, 1047].forEach((f, i) => {
+      const at = 1.75 + i * 0.07;
+      note(f, at, 0.16, "square", 0.07);
+      note(110, at, 0.12, "sine", 0.35, 55);
+    });
+    note(80, 2.25, 0.9, "sine", 0.6, 30);
+    noise(2.25, 1.4, 5000, 0.4, 0.3, "highpass");
+    [262, 330, 392, 523, 659, 784].forEach((f) => {
+      note(f, 2.27, 1.5, "sawtooth", 0.04);
+      note(f * 1.004, 2.27, 1.5, "triangle", 0.07);
+    });
+  },
   // The AI's milestone: computing bleeps, a rising sweep while it "processes",
   // a digital crunch at the slam, then a square-wave arpeggio, very pleased with itself.
   milestoneAI: () => {

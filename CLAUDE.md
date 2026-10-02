@@ -20,7 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
@@ -38,6 +38,11 @@ src/
                finds a player's lifetime `played` at 50, 100, 250, 500, 1000, ... (isMilestone in lines.js).
                The lobby's Badges panel fires the same event with `replay: true` to play one again;
                badges are derived from `played` (milestonesUpTo), never stored
+  fahtzee-scene.js  The Fahtzee cut-scene (letterbox, dice fly in, the word letter by letter), pure f(t)
+  FahtzeeScene.jsx  Plays it on the `fahtzee-scene` window event, fired by doRoll when a roll lands
+               five alike (at least one die rolled), and fires `fahtzee-scene-done` when over.
+               App's sceneOnRef blocks Roll and holds the AI's turn loop until then; sceneSpokeRef
+               stops scoreCategory saying "Fahtzee" a second time
   Splash.jsx   Once per session (sessionStorage): a Tap to play card, whose tap starts
                the animation AND its soundtrack (phones need a tap for sound); 2nd tap skips
   splash-audio.js  GENERATED soundtrack (base64 MP3, ~57 KB): never hand edit
@@ -113,6 +118,10 @@ test/milestone.js Milestones: 499 stays quiet, 500 celebrates after the win land
                   a tap after dismisses it, the AI's own style, reduced motion, and the
                   lobby's Badges panel in all six skins (counts, replays, empty device).
                   SHOTS=dir saves screenshots. Playwright.
+test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not, early taps
+                  do not skip it, it leaves by itself, "Fahtzee" is said exactly once, the AI
+                  waits for it before scoring, all six skins, reduced motion. Math.random is
+                  replaced before boot to load the dice. SHOTS=dir saves screenshots.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it
