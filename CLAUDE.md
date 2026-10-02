@@ -20,7 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
@@ -32,6 +32,9 @@ src/
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
   splash.js    The opening splash, drawn live on a canvas; every frame is a pure f(t)
+  milestone.js The milestone (50/100/250/500/every 500) celebration, drawn live on a canvas; every frame is a pure f(t)
+  Milestone.jsx Shows it when App fires the `fahtzee-milestone` window event after recordGame
+               finds a player's lifetime `played` at 50, 100, 250, 500, 1000, ... (isMilestone in lines.js)
   Splash.jsx   Once per session (sessionStorage): a Tap to play card, whose tap starts
                the animation AND its soundtrack (phones need a tap for sound); 2nd tap skips
   splash-audio.js  GENERATED soundtrack (base64 MP3, ~57 KB): never hand edit
@@ -102,6 +105,9 @@ test/splash.js    The splash waits on its card, the tap starts animation and sou
                   itself, it plays once per session, honours reduced motion.
                   The other suites seed sessionStorage `fahtzee-splash-seen` so
                   they start in the lobby; do the same in any new test.
+test/milestone.js The 500th game: 499 stays quiet, 500 celebrates after the win lands,
+                  early taps do not skip it, a tap after dismisses it, the AI's own
+                  version, reduced motion. SHOTS=dir saves screenshots. Playwright.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it

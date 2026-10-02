@@ -4,7 +4,8 @@ import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
 import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
-import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine } from "./lines.js";
+import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone } from "./lines.js";
+import { MILESTONE_EVENT } from "./Milestone.jsx";
 
 // ---------- Themes ----------
 const THEMES = {
@@ -979,17 +980,41 @@ export default function Fahtzee() {
     }
   }, [phase, players, current, round, dice, held, rollsLeft]);
 
+  // Anyone whose lifetime games just reached 50, 100, 250, 500 (or 1000, ...) gets the
+  // celebration in src/Milestone.jsx. Called once, right after recordGame.
+  const celebrateMilestones = (results, delay) => {
+    const t = loadTally();
+    const hits = results
+      .map((r) => ({ r, p: t.players[r.name] }))
+      .filter(({ p }) => p && isMilestone(p.played))
+      .map(({ r, p }) => ({
+        name: r.name,
+        isBot: r.isBot,
+        colour: (players.find((q) => q.name === r.name) || {}).colour,
+        played: p.played,
+        wins: p.wins,
+        best: p.best,
+      }));
+    if (!hits.length) return;
+    const n = Math.max(...hits.map((h) => h.played));
+    setTimeout(() => {
+      try {
+        window.dispatchEvent(new CustomEvent(MILESTONE_EVENT, { detail: { n, players: hits.filter((h) => h.played === n) } }));
+      } catch {}
+    }, delay);
+  };
+
   const newGame = () => {
     if (phase === "over" && !recordedRef.current && players.length > 0) {
       // Roll-off never settled: record it as a shared win
       const totals = players.map((p) => totalsFor(p).grand);
       const top = Math.max(...totals);
       const results = players.map((p) => ({ name: p.name, total: totalsFor(p).grand, isBot: !!p.isBot }));
-      recordGame({
+      if (recordGame({
         date: new Date().toISOString(),
         results,
         winners: players.filter((_, i) => totals[i] === top).map((p) => p.name),
-      });
+      })) celebrateMilestones(results, 300);
       recordedRef.current = true;
     }
     setPhase("setup");
@@ -1081,6 +1106,8 @@ export default function Fahtzee() {
     if (recordGame({ date: new Date().toISOString(), results, winners: [winner.name] })) {
       setHistory(loadHistory());
       setTally(loadTally());
+      // Let the win land first, then the big one
+      celebrateMilestones(results, 3500);
     }
     const humans = players.filter((p) => !p.isBot);
     const solo = humans.length === 1;

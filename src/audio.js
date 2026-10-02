@@ -130,6 +130,79 @@ const SFX = {
     const ctx = getCtx(); if (!ctx) return;
     [392, 523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(ctx, f, i * 0.13, 0.26, "triangle", 0.13));
   },
+  // The milestone: a counter ticking up and up, a drum roll on 499, then a slam,
+  // a brass chord, a fanfare and fireworks. Timed to src/milestone.js (slam at 2.9s).
+  milestone: () => {
+    const ctx = getCtx(); if (!ctx) return;
+    const out = ctx.createGain();
+    out.gain.value = 0.9;
+    out.connect(ctx.destination);
+    _milestoneOut = out;
+    const t0 = ctx.currentTime;
+    const noise = (when, dur, freq, q, vol, type = "bandpass") => {
+      const buf = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * dur), ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const f = ctx.createBiquadFilter();
+      f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t0 + when);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
+      src.connect(f).connect(g).connect(out);
+      src.start(t0 + when);
+    };
+    const note = (freq, when, dur, type, vol, glide) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t0 + when);
+      if (glide) o.frequency.exponentialRampToValueAtTime(glide, t0 + when + dur);
+      g.gain.setValueAtTime(0.0001, t0 + when);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + when + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
+      o.connect(g).connect(out);
+      o.start(t0 + when);
+      o.stop(t0 + when + dur + 0.05);
+    };
+    // The counter: ticks that start quick and slow down, climbing in pitch
+    for (let i = 0, t = 0.5; t < 2.45; i++) {
+      note(700 + i * 22, t, 0.04, "square", 0.05);
+      t += 0.035 + 0.11 * Math.pow((t - 0.5) / 1.95, 2);
+    }
+    // Drum roll on 499, swelling
+    for (let t = 2.45; t < 2.88; t += 0.028) noise(t, 0.05, 1800, 0.7, 0.08 + 0.3 * ((t - 2.45) / 0.43));
+    // The slam: a sub boom, a crash and a big brass chord
+    note(110, 2.9, 0.9, "sine", 0.6, 38);
+    noise(2.9, 1.6, 5000, 0.4, 0.35, "highpass");
+    noise(2.9, 0.3, 200, 0.8, 0.6, "lowpass");
+    [131, 196, 262, 330, 392, 523].forEach((f) => {
+      note(f, 2.92, 1.6, "sawtooth", 0.05);
+      note(f * 1.004, 2.92, 1.6, "triangle", 0.08);
+    });
+    // Fanfare: da-da-da-DAAA
+    [[523, 3.5, 0.14], [523, 3.66, 0.14], [523, 3.82, 0.14], [784, 3.98, 0.5], [659, 4.5, 0.16],
+     [784, 4.68, 0.16], [1047, 4.86, 0.9]].forEach(([f, w, d]) => {
+      note(f, w, d, "square", 0.06);
+      note(f / 2, w, d, "triangle", 0.1);
+    });
+    // Fireworks: a whistle up, then a crackling pop, a few times over
+    [3.0, 3.14, 3.26, 3.9, 4.3, 4.75, 5.2, 5.6, 6.1, 6.5].forEach((w, i) => {
+      if (i > 2) note(900, w - 0.5, 0.45, "sine", 0.025, 2200);
+      noise(w, 0.5, 900, 0.5, 0.35, "lowpass");
+      for (let c = 0; c < 6; c++) noise(w + 0.12 + Math.random() * 0.5, 0.02, 4000, 1, 0.12);
+    });
+  },
+};
+
+// Fade the milestone soundtrack out early, if the player taps past it
+let _milestoneOut = null;
+export const hushMilestone = () => {
+  try {
+    if (_milestoneOut) _milestoneOut.gain.setTargetAtTime(0, _milestoneOut.context.currentTime, 0.15);
+    _milestoneOut = null;
+  } catch {}
 };
 
 // ---------- Recorded samples (optional, from /sounds in the repo) ----------
