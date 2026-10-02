@@ -42,6 +42,8 @@ The game has six skins, cycled from the button in the corner and remembered betw
 
 The first time you open the game in a session it greets you with a red die and a Tap to play. Tap, and the die bursts into five, they land as a Fahtzee, and the tagline settles, all to its own soundtrack. The pictures are drawn live rather than played from a video, so they look sharp on any screen, and the music is a few seconds synthesised from scratch and tucked inside the game, so it works offline too. Tap again to skip it, the speaker button still silences everything once you are in, and it stays away entirely if your phone is set to reduce motion.
 
+Finish your 500th game and the game notices. Once the result has landed, the screen goes dark, a counter races up through your career and stalls on 499 just long enough to be rude about it, then 500 slams home in a flash and a shockwave, the dice burst out of it, and the fireworks start and do not stop until you tap. Your lifetime wins, win rate and best ever come up underneath, and the announcer says a few words. It happens again at 1,000, and every 500 after that, for anyone who gets there. The AI gets one too, and is insufferable about it.
+
 ## Bring your own sounds
 
 Fancy the game sounding like your actual dice on your actual table? Record them and drop the files into a `sounds` folder in this repo: `roll1`, `roll2`, `roll3` for roll variations, plus `hold`, `bank`, `fahtzee` and `win`, in mp3, m4a or wav. The game finds them automatically. Anything missing falls back to the synth. The Fahtzee voice speaks regardless. That is not configurable. It is the soul of the game.
@@ -57,6 +59,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.14** Five hundred games gets you a counter, a slam, a shockwave, forty flying dice, fireworks until you tap, and a short speech. Tony was on 499 when this was written, which is either good timing or a cry for help
 
 **v2.13** The splash soundtrack now actually plays on phones. It was listening for your finger to touch the screen, and phones only allow sound once the finger lifts, so v2.12 had a soundtrack that only a desktop mouse ever heard
 

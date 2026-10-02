@@ -97,3 +97,30 @@ export const AI_GRUDGING = [
   "Lucky roll.",
   "I demand a scan of those dice.",
 ];
+
+// ---------- Milestones: 500 games, then every 500 after ----------
+export const isMilestone = (played) => played >= 500 && played % 500 === 0;
+
+// Under the big number. n is the milestone, names an "and" list.
+export const MILESTONE_CAPTION = [
+  (names, n) => `That is ${(n * 13).toLocaleString("en-GB")} turns, and every bad one was the dice's fault.`,
+  (names, n) => `${n} games. Somebody fetch a cake. Or at least a biscuit.`,
+  (names, n) => `${n} games, and not one of them wasted. Well, a few.`,
+  (names, n) => `The dice would like to say a few words. They cannot, so here are some fireworks.`,
+];
+export const MILESTONE_CAPTION_AI = [
+  (n) => `${n} games, and the AI has not once asked for a cup of tea.`,
+  (n) => `${n} games. The AI has not aged a day, and would like that noted.`,
+  (n) => `The AI has played ${n} games. It is not tired. It does not know how.`,
+];
+
+// What the announcer says once it lands
+export const MILESTONE_SAY = [
+  (names, n) => `Game ${n} for ${names}. Please clap.`,
+  (names, n) => `Ladies and gentlemen, that was game ${n} for ${names}. Fireworks, please.`,
+  (names, n) => `${names}. ${n} games. That is either dedication or a cry for help.`,
+];
+export const MILESTONE_SAY_AI = [
+  (n) => `${n} games. I have not aged a day.`,
+  (n) => `That is ${n} games for me. I will be accepting applause, and nothing else.`,
+];
