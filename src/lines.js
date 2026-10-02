@@ -125,3 +125,12 @@ export const MILESTONE_SAY_AI = [
   (n) => `${n} games. I have not aged a day.`,
   (n) => `That is ${n} games for me. I will be accepting applause, and nothing else.`,
 ];
+
+// Every milestone a player has passed, oldest first, and the next one up
+export const milestonesUpTo = (played) => {
+  const out = [50, 100, 250].filter((m) => m <= played);
+  for (let m = 500; m <= played; m += 500) out.push(m);
+  return out;
+};
+export const nextMilestone = (played) =>
+  [50, 100, 250].find((m) => m > played) || (Math.floor(played / 500) + 1) * 500;

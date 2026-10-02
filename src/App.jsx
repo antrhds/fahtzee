@@ -4,7 +4,7 @@ import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
 import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
-import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone } from "./lines.js";
+import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone } from "./lines.js";
 import { MILESTONE_EVENT } from "./Milestone.jsx";
 
 // ---------- Themes ----------
@@ -441,6 +441,15 @@ const purgeUndoStack = () => {
   } catch {}
 };
 
+// ---------- Badge medals: bronze 50, silver 100, gold 250, amethyst 500+ ----------
+// Materials, not skin colours: a gold medal is gold in every skin.
+const MEDALS = [
+  { hi: "#FBD3B0", lo: "#B8692F", rim: "#8C4E22" },
+  { hi: "#FFFFFF", lo: "#9AA3B5", rim: "#6F7789" },
+  { hi: "#FFF0B8", lo: "#D99A1C", rim: "#A87310" },
+  { hi: "#F1E6FF", lo: "#8E5BE8", rim: "#6A3CC4" },
+];
+
 // ---------- Confetti ----------
 const CONFETTI_COLOURS = ["#FFD23F", "#4CC9F0", "#F72585", "#80ED99", "#B5179E", "#FFA62B"];
 function Confetti() {
@@ -644,6 +653,7 @@ export default function Fahtzee() {
   const [addBot, setAddBot] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
   const [readme, setReadme] = useState(null); // null = closed, "loading", or content
   const [history, setHistory] = useState(() => loadHistory());
   const [tally, setTally] = useState(() => loadTally());
@@ -1677,6 +1687,145 @@ export default function Fahtzee() {
             </div>
           )}
         </div>
+
+        {/* Badges: one per milestone reached, and each one replays its celebration */}
+        {(() => {
+          const people = Object.entries(tally.players)
+            .filter(([, st]) => st.played > 0)
+            .sort((a, b) => b[1].played - a[1].played);
+          const collected = people.reduce((n, [, st]) => n + milestonesUpTo(st.played).length, 0);
+          // The colour they last played in, if the lobby still remembers it
+          const colourOf = (name) => {
+            const i = nameInputs.findIndex((v) => v.trim() === name);
+            if (i >= 0) return COLOUR_CHOICES[colourPicks[i]].hex;
+            const p = savedGame && savedGame.players.find((q) => q.name === name);
+            return p ? p.colour : name === "AI" ? COLOUR_CHOICES[1].hex : COLOUR_CHOICES[3].hex;
+          };
+          const replay = (name, st, n) => {
+            try {
+              window.dispatchEvent(new CustomEvent(MILESTONE_EVENT, {
+                detail: { n, replay: true, players: [{ name, colour: colourOf(name), isBot: name === "AI",
+                  played: st.played, wins: st.wins, best: st.best }] },
+              }));
+            } catch {}
+          };
+          const short = (n) => (n >= 1000 ? `${n / 1000}K` : String(n));
+          return (
+            <div style={{ width: "100%", maxWidth: 380, marginTop: 16 }}>
+              <button
+                onClick={() => setShowBadges((v) => !v)}
+                style={{
+                  width: "100%",
+                  padding: "11px 16px",
+                  borderRadius: 14,
+                  border: T.cardBorder,
+                  boxShadow: T.cardShadow,
+                  background: T.card,
+                  color: T.text,
+                  fontFamily: "inherit",
+                  fontSize: 15,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>🏅 Badges</span>
+                <span style={{ color: T.sub45 }}>{collected} collected {showBadges ? "▲" : "▼"}</span>
+              </button>
+              {showBadges && (
+                <div
+                  data-badges
+                  style={{
+                    marginTop: 8,
+                    borderRadius: 14,
+                    border: T.cardBorder,
+                    boxShadow: T.cardShadow,
+                    background: T.card,
+                    overflow: "hidden",
+                  }}
+                >
+                  {people.length === 0 && (
+                    <div style={{ padding: "16px", fontSize: 14, color: T.sub55, textAlign: "center" }}>
+                      No badges yet. The first one comes at 50 games, which is fewer than you think.
+                    </div>
+                  )}
+                  {people.map(([name, st], row) => {
+                    const earned = milestonesUpTo(st.played);
+                    const next = nextMilestone(st.played);
+                    const bot = name === "AI";
+                    return (
+                      <div key={name} style={{ padding: "12px 14px", borderTop: row ? `1px solid ${T.border2}` : "none" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, gap: 8 }}>
+                          <span style={{ fontWeight: 800, fontSize: 14.5, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{name}</span>
+                          <span style={{ fontSize: 12, color: T.sub55, whiteSpace: "nowrap" }}>
+                            {st.played} game{st.played === 1 ? "" : "s"} · {next - st.played} to go
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                          {earned.map((n) => {
+                            const m = MEDALS[Math.min(MEDALS.length - 1, [50, 100, 250, 500].filter((x) => x <= n).length - 1)];
+                            return (
+                              <button
+                                key={n}
+                                aria-label={`${name}: ${n} games badge. Tap to replay.`}
+                                onClick={() => replay(name, st, n)}
+                                style={{
+                                  width: 52,
+                                  height: 52,
+                                  padding: 0,
+                                  borderRadius: bot ? 10 : "50%",
+                                  border: bot ? "2px solid #3CF0FF" : `2px solid ${m.rim}`,
+                                  background: bot
+                                    ? "linear-gradient(160deg, #0E3A3C, #031212)"
+                                    : `radial-gradient(circle at 35% 30%, ${m.hi}, ${m.lo} 75%)`,
+                                  boxShadow: bot ? "0 0 10px rgba(60,240,255,0.45)" : `0 2px 6px rgba(0,0,0,0.25), inset 0 -3px 0 rgba(0,0,0,0.18)`,
+                                  color: bot ? "#3CF0FF" : "#2A1A06",
+                                  fontFamily: bot ? "Audiowide, ui-monospace, monospace" : "inherit",
+                                  fontSize: n >= 1000 ? 14 : 15,
+                                  fontWeight: 900,
+                                  textShadow: bot ? "0 0 6px rgba(60,240,255,0.8)" : "0 1px 0 rgba(255,255,255,0.5)",
+                                  cursor: "pointer",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {short(n)}
+                              </button>
+                            );
+                          })}
+                          <div
+                            aria-label={`${name}: next badge at ${next} games`}
+                            style={{
+                              width: 52,
+                              height: 52,
+                              borderRadius: bot ? 10 : "50%",
+                              border: `2px dashed ${T.blankBorder}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: T.sub45,
+                              fontSize: 13,
+                              fontWeight: 800,
+                              lineHeight: 1.1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {short(next)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {collected > 0 && (
+                    <div style={{ padding: "8px 14px 11px", fontSize: 12, color: T.sub45, textAlign: "center", borderTop: `1px solid ${T.border2}` }}>
+                      Tap a badge to relive it.{tally.players.AI && milestonesUpTo(tally.players.AI.played).length > 0 ? " The AI has asked to relive all of its own." : ""}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </>
     );
   }

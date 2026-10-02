@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createMilestone, SLAM } from "./milestone.js";
+import { createMilestone, SLAM, AI_CYAN } from "./milestone.js";
 import { play, say, haptic, hushMilestone } from "./audio.js";
 import { pick, nameList, MILESTONE_CAPTION, MILESTONE_CAPTION_AI, MILESTONE_SAY, MILESTONE_SAY_AI } from "./lines.js";
 
@@ -8,11 +8,14 @@ import { pick, nameList, MILESTONE_CAPTION, MILESTONE_CAPTION_AI, MILESTONE_SAY,
 // can sit beside the splash in entry.jsx and appear on any screen:
 //   window.dispatchEvent(new CustomEvent("fahtzee-milestone", { detail: { n, players } }))
 // players: [{ name, colour, isBot, played, wins, best }] — everyone who just got there.
+// replay: true when a badge in the lobby asks to see an old one again; the
+// lifetime stats only show when n is the player's current total.
 export const MILESTONE_EVENT = "fahtzee-milestone";
 const FADE_MS = 500;
 const TAP_FROM = SLAM + 0.6; // taps before this are the game's, not a skip
 const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 const DISPLAY = "'Baloo 2', 'Avenir Next', 'Segoe UI', system-ui, sans-serif";
+const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
 
 const reducedMotion = () => {
   try {
@@ -53,9 +56,11 @@ export default function Milestone() {
   useEffect(() => {
     if (!show) return;
     startRef.current = performance.now();
-    // The number is drawn in Baloo 2; ask for it now so the count-up uses it
-    try { document.fonts && document.fonts.load("800 100px 'Baloo 2'"); } catch (e) {}
-    play("milestone");
+    // The number is drawn in Baloo 2 (Audiowide for the AI); ask for it now so the count-up uses it
+    try {
+      if (document.fonts) document.fonts.load(show.ai ? "700 100px Audiowide" : "800 100px 'Baloo 2'");
+    } catch (e) {}
+    play(show.ai ? "milestoneAI" : "milestone");
     const timers = [
       setTimeout(() => haptic([60, 40, 200, 60, 40, 60, 40, 300]), SLAM * 1000),
       setTimeout(() => say(show.line, show.ai ? { pitch: 0.8, rate: 0.9 } : {}), (SLAM + 0.5) * 1000),
@@ -72,10 +77,10 @@ export default function Milestone() {
     const colours = show.players.map((p) => p.colour).filter(Boolean);
     let raf = 0;
     if (m) {
-      if (reducedMotion()) m.draw(SLAM + 1.6, show.n, colours);
+      if (reducedMotion()) m.draw(SLAM + 1.6, show.n, colours, show.ai);
       else {
         const frame = (now) => {
-          m.draw((now - startRef.current) / 1000, show.n, colours);
+          m.draw((now - startRef.current) / 1000, show.n, colours, show.ai);
           raf = requestAnimationFrame(frame);
         };
         raf = requestAnimationFrame(frame);
@@ -100,7 +105,12 @@ export default function Milestone() {
   // CSS entrances, timed against the canvas (both start when this mounts)
   const enter = (at, extra = "") =>
     still ? {} : { animation: `fahtzeeMsIn 0.7s cubic-bezier(.2,1.4,.4,1) ${at}s both${extra}` };
-  const solo = show.players.length === 1 ? show.players[0] : null;
+  const solo = show.players.length === 1 && show.players[0].played === show.n ? show.players[0] : null;
+  // The AI's version: terminal type and cyan, and it wants acknowledging, not thanking
+  const ai = show.ai;
+  const accent = ai ? AI_CYAN : "#FFD98A";
+  const chipBg = ai ? "rgba(2,16,16,0.9)" : "rgba(255,201,74,0.12)";
+  const chipLine = ai ? "1px solid rgba(60,240,255,0.5)" : "1px solid rgba(255,201,74,0.45)";
   const pct = solo && solo.played ? Math.round((100 * solo.wins) / solo.played) : null;
   // The text sits just under the big number (see NUMBER_Y in milestone.js)
   const top = size.h / 2 - 70 * size.s;
@@ -108,14 +118,15 @@ export default function Milestone() {
   return (
     <div
       role="button"
-      aria-label={`${show.n} games. Tap to carry on.`}
+      aria-label={`${show.n} games. Tap to ${ai ? "acknowledge" : "carry on"}.`}
+      data-milestone-style={ai ? "ai" : "human"}
       data-milestone={fading ? "fading" : "on"}
       onClick={leave}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 9000,
-        background: "#0B0818",
+        background: ai ? "#010605" : "#0B0818",
         opacity: fading ? 0 : 1,
         transition: `opacity ${FADE_MS}ms ease`,
         animation: still ? "none" : "fahtzeeMsFade 0.5s ease both",
@@ -130,11 +141,12 @@ export default function Milestone() {
     >
       <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
       <div style={{ position: "absolute", left: 16, right: 16, top, textAlign: "center", pointerEvents: "none" }}>
-        <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 9, textTransform: "uppercase", color: "#FFD98A",
+        <div style={{ fontSize: ai ? 15 : 17, fontWeight: 800, letterSpacing: ai ? 6 : 9, textTransform: "uppercase", color: accent,
+          fontFamily: ai ? MONO : FONT,
           paddingLeft: 9, ...enter(SLAM + 0.15) }}>
-          games
+          {ai ? "games processed" : "games"}
         </div>
-        <div style={{ marginTop: 14, fontFamily: DISPLAY, fontWeight: 800, fontSize: 40, lineHeight: 1.1,
+        <div style={{ marginTop: 14, fontFamily: ai ? "Audiowide, " + MONO : DISPLAY, fontWeight: 800, fontSize: 40, lineHeight: 1.1,
           overflowWrap: "anywhere", ...enter(SLAM + 0.45) }}>
           {show.players.map((p, i) => (
             <span key={p.name}>
@@ -145,7 +157,8 @@ export default function Milestone() {
             </span>
           ))}
         </div>
-        <div style={{ margin: "14px auto 0", maxWidth: 330, fontSize: 16, lineHeight: 1.45, color: "rgba(245,243,250,0.85)",
+        <div style={{ margin: "14px auto 0", maxWidth: 330, fontSize: ai ? 15 : 16, lineHeight: 1.45, color: "rgba(245,243,250,0.85)", fontFamily: ai ? MONO : FONT,
+          textShadow: ai ? "0 0 6px #010605, 0 0 12px #010605" : "none",
           ...enter(SLAM + 0.9) }}>
           {show.caption}
         </div>
@@ -156,10 +169,10 @@ export default function Milestone() {
               [`${pct}%`, "win rate"],
               [solo.best, "best ever"],
             ].map(([v, label], i) => (
-              <div key={label} style={{ minWidth: 86, padding: "8px 10px", borderRadius: 14,
-                background: "rgba(255,201,74,0.12)", border: "1px solid rgba(255,201,74,0.45)",
+              <div key={label} style={{ minWidth: 86, padding: "8px 10px",
+                background: chipBg, border: chipLine, borderRadius: ai ? 4 : 14, fontFamily: ai ? MONO : FONT,
                 ...enter(SLAM + 1.3 + i * 0.15) }}>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#FFD98A", fontVariantNumeric: "tabular-nums" }}>{v}</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: accent, fontVariantNumeric: "tabular-nums" }}>{v}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.7 }}>{label}</div>
               </div>
             ))}
@@ -167,10 +180,10 @@ export default function Milestone() {
         )}
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, bottom: "max(26px, env(safe-area-inset-bottom))", textAlign: "center",
-        fontSize: 13, fontWeight: 600, letterSpacing: 3, textTransform: "uppercase", color: "rgba(245,243,250,0.6)",
-        pointerEvents: "none",
+        fontSize: 13, fontWeight: 600, letterSpacing: 3, textTransform: "uppercase", color: ai ? "rgba(60,240,255,0.7)" : "rgba(245,243,250,0.6)",
+        fontFamily: ai ? MONO : FONT, pointerEvents: "none",
         ...(still ? {} : { animation: `fahtzeeMsFade 0.6s ease ${SLAM + 2.4}s both, fahtzeeMsBreathe 2s ease-in-out ${SLAM + 3}s infinite` }) }}>
-        Tap to carry on
+        {ai ? "Tap to acknowledge" : "Tap to carry on"}
       </div>
       <style>
         {"@keyframes fahtzeeMsFade { from { opacity: 0 } to { opacity: 1 } }" +

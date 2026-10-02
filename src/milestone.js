@@ -16,6 +16,9 @@ export const NUMBER_Y = -250; // the number's centre, in stage units above the m
 const PAL = COLOUR_CHOICES.map((c) => c.hex);
 const GOLD = "#FFC94A", TAU = Math.PI * 2;
 const NUM_FONT = "'Baloo 2', 'Avenir Next', 'Segoe UI', system-ui, sans-serif";
+const AI_FONT = "Audiowide, 'Courier New', monospace";
+const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+export const AI_CYAN = "#3CF0FF", AI_GREEN = "#39FF88";
 
 // ---------- maths ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -30,6 +33,7 @@ function rng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+const hash = (x) => { const v = Math.sin(x * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
 const rgbOf = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const rgba = (h, a) => { const [r, g, b] = rgbOf(h); return `rgba(${r},${g},${b},${a})`; };
 const pipFor = (h) => { const [r, g, b] = rgbOf(h); return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#17132B" : "#FFFFFF"; };
@@ -96,6 +100,61 @@ function drawDie(g, size, face, colour) {
   }
 }
 
+// Fireworks: rockets climb from the bottom, then burst. Shared by both versions.
+function drawFireworks(g, t, tau, SW, SH, pal) {
+  const landed = tau >= 0;
+  if (landed) {
+    g.globalCompositeOperation = "lighter";
+    const kMax = 3 + Math.ceil((tau + 1) / BURST_EVERY);
+    for (let k = Math.max(0, kMax - Math.ceil((RISE + BURST_LIFE) / BURST_EVERY) - 4); k <= kMax; k++) {
+      const b = burst(k);
+      const bx = b.first ? b.x : b.x * SW;
+      const by = b.first ? b.y : b.y * SH;
+      const age = t - b.at; // seconds since it burst
+      if (!b.first && age < 0 && age > -RISE) {
+        // the rocket, trailing sparks
+        const u = outCubic(1 + age / RISE);
+        const ry = SH / 2 + (by - SH / 2) * u;
+        for (let j = 0; j < 8; j++) {
+          g.fillStyle = `rgba(255,230,170,${0.8 - j * 0.1})`;
+          g.fillRect(bx - 4 + Math.sin(j * 7 + t * 40) * 3, ry + j * 22, 8, 8);
+        }
+      }
+      if (age < 0 || age > BURST_LIFE) continue;
+      const r = rng(31337 + b.seed);
+      const ca = pal[Math.floor(b.colour * pal.length) % pal.length];
+      const cb = pal[(Math.floor(b.colour * pal.length) + 2) % pal.length];
+      const fade = 1 - age / BURST_LIFE;
+      const reach = (1 - Math.exp(-3 * age)) / 3; // drag: fast out, then hangs
+      if (age < 0.12) {
+        // the pop
+        const pop = g.createRadialGradient(bx, by, 0, bx, by, 220);
+        pop.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - age / 0.12)})`);
+        pop.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = pop;
+        g.fillRect(bx - 220, by - 220, 440, 440);
+      }
+      for (let p = 0; p < SPARKS; p++) {
+        const ang = b.ring ? (p / SPARKS) * TAU : r() * TAU;
+        const sp = b.speed * (b.ring ? 1 : 0.35 + 0.65 * Math.sqrt(r()));
+        const twinkle = age > 0.9 && r() < 0.5 ? (Math.sin(t * 40 + p) > 0 ? 1 : 0.2) : 1;
+        const px = bx + Math.cos(ang) * sp * reach;
+        const py = by + Math.sin(ang) * sp * reach + 260 * age * age;
+        g.fillStyle = rgba(b.two && p % 2 ? cb : ca, fade * twinkle);
+        const z = 15 * (0.6 + 0.4 * fade);
+        g.fillRect(px - z / 2, py - z / 2, z, z);
+        // a short streak behind each spark while it is still quick
+        if (age < 0.5) {
+          const back = reach - 0.05;
+          g.fillStyle = rgba(ca, 0.35 * fade);
+          g.fillRect(bx + Math.cos(ang) * sp * back - 5, by + Math.sin(ang) * sp * back - 5, 10, 10);
+        }
+      }
+    }
+    g.globalCompositeOperation = "source-over";
+  }
+}
+
 export function createMilestone(canvas) {
   const g = canvas && canvas.getContext && canvas.getContext("2d");
   if (!g) return null;
@@ -108,8 +167,10 @@ export function createMilestone(canvas) {
     s = Math.min(w / 1080, h / 1500);
   };
 
-  // n: the milestone. colours: the players' own (stored hex), first is the star
-  const draw = (t, n, colours = []) => {
+  // n: the milestone. colours: the players' own (stored hex), first is the star.
+  // ai: the AI's own version, a data centre rather than a fireworks night.
+  const draw = (t, n, colours = [], ai = false) => {
+    if (ai) return drawAI(t, n, colours);
     const pal = colours.length ? [...colours, ...colours, ...PAL] : PAL;
     const SW = W / s, SH = H / s; // the stage, in stage units
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -184,57 +245,7 @@ export function createMilestone(canvas) {
       }
     }
 
-    // Fireworks: rockets climb from the bottom, then burst
-    if (landed) {
-      g.globalCompositeOperation = "lighter";
-      const kMax = 3 + Math.ceil((tau + 1) / BURST_EVERY);
-      for (let k = Math.max(0, kMax - Math.ceil((RISE + BURST_LIFE) / BURST_EVERY) - 4); k <= kMax; k++) {
-        const b = burst(k);
-        const bx = b.first ? b.x : b.x * SW;
-        const by = b.first ? b.y : b.y * SH;
-        const age = t - b.at; // seconds since it burst
-        if (!b.first && age < 0 && age > -RISE) {
-          // the rocket, trailing sparks
-          const u = outCubic(1 + age / RISE);
-          const ry = SH / 2 + (by - SH / 2) * u;
-          for (let j = 0; j < 8; j++) {
-            g.fillStyle = `rgba(255,230,170,${0.8 - j * 0.1})`;
-            g.fillRect(bx - 4 + Math.sin(j * 7 + t * 40) * 3, ry + j * 22, 8, 8);
-          }
-        }
-        if (age < 0 || age > BURST_LIFE) continue;
-        const r = rng(31337 + b.seed);
-        const ca = pal[Math.floor(b.colour * pal.length) % pal.length];
-        const cb = pal[(Math.floor(b.colour * pal.length) + 2) % pal.length];
-        const fade = 1 - age / BURST_LIFE;
-        const reach = (1 - Math.exp(-3 * age)) / 3; // drag: fast out, then hangs
-        if (age < 0.12) {
-          // the pop
-          const pop = g.createRadialGradient(bx, by, 0, bx, by, 220);
-          pop.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - age / 0.12)})`);
-          pop.addColorStop(1, "rgba(255,255,255,0)");
-          g.fillStyle = pop;
-          g.fillRect(bx - 220, by - 220, 440, 440);
-        }
-        for (let p = 0; p < SPARKS; p++) {
-          const ang = b.ring ? (p / SPARKS) * TAU : r() * TAU;
-          const sp = b.speed * (b.ring ? 1 : 0.35 + 0.65 * Math.sqrt(r()));
-          const twinkle = age > 0.9 && r() < 0.5 ? (Math.sin(t * 40 + p) > 0 ? 1 : 0.2) : 1;
-          const px = bx + Math.cos(ang) * sp * reach;
-          const py = by + Math.sin(ang) * sp * reach + 260 * age * age;
-          g.fillStyle = rgba(b.two && p % 2 ? cb : ca, fade * twinkle);
-          const z = 15 * (0.6 + 0.4 * fade);
-          g.fillRect(px - z / 2, py - z / 2, z, z);
-          // a short streak behind each spark while it is still quick
-          if (age < 0.5) {
-            const back = reach - 0.05;
-            g.fillStyle = rgba(ca, 0.35 * fade);
-            g.fillRect(bx + Math.cos(ang) * sp * back - 5, by + Math.sin(ang) * sp * back - 5, 10, 10);
-          }
-        }
-      }
-      g.globalCompositeOperation = "source-over";
-    }
+    drawFireworks(g, t, tau, SW, SH, pal);
 
     // Shockwave rings from the slam
     if (landed && tau < 1.4) {
@@ -312,6 +323,213 @@ export function createMilestone(canvas) {
       g.fillStyle = `rgba(255,248,225,${0.85 * Math.pow(1 - tau / 0.6, 2)})`;
       g.fillRect(0, 0, W, H);
     }
+  };
+
+  // ---------- The AI's version ----------
+  // Same clock, same beats: it fades in, computes, stalls one short, then lands
+  // at SLAM. Digit rain and a scrolling grid instead of a night sky, a scrambling
+  // read-out instead of a counter, a glitch instead of a flash, and binary
+  // instead of dice. Fireworks it allows, in its own colours.
+  const drawAI = (t, n, colours) => {
+    const own = colours[0] || AI_CYAN;
+    const pal = [AI_CYAN, AI_GREEN, "#FFFFFF", own, AI_CYAN, AI_GREEN];
+    const SW = W / s, SH = H / s;
+    const tau = t - SLAM;
+    const landed = tau >= 0;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.globalAlpha = 0.97 * outCubic(inv(0, 0.5, t));
+    const back = g.createRadialGradient(W / 2, H * 0.36, 0, W / 2, H * 0.36, Math.max(W, H));
+    back.addColorStop(0, "#0A2A2A");
+    back.addColorStop(1, "#010605");
+    g.fillStyle = back;
+    g.fillRect(0, 0, W, H);
+    g.globalAlpha = 1;
+
+    let sx = 0, sy = 0;
+    if (!landed && t > COUNT_TO) {
+      const a = 3 + 10 * inv(COUNT_TO, SLAM, t);
+      sx = Math.sin(t * 97) * a; sy = Math.cos(t * 71) * a;
+    } else if (landed) {
+      const a = 40 * Math.exp(-tau * 6);
+      sx = (Math.sin(tau * 83) > 0 ? 1 : -1) * a; sy = Math.cos(tau * 47) * a * 0.4; // jerky, digital
+    }
+    g.setTransform(dpr * s, 0, 0, dpr * s, dpr * (W / 2 + sx * s), dpr * (H / 2 + sy * s));
+
+    // The grid floor, rolling towards you
+    const gridA = 0.5 * outCubic(inv(0.2, 1.2, t)) * (landed ? 1 : 0.7);
+    const horizon = 260, floor = SH / 2;
+    g.save();
+    g.beginPath();
+    g.rect(-SW / 2, horizon, SW, floor - horizon);
+    g.clip();
+    g.lineWidth = 3;
+    const roll = (t * (landed ? 1.6 : 0.8)) % 1;
+    for (let k = 0; k < 22; k++) {
+      const d = k + 1 - roll;
+      const y = horizon + (floor - horizon) / d;
+      g.strokeStyle = rgba(AI_CYAN, gridA / Math.sqrt(d));
+      g.beginPath(); g.moveTo(-SW / 2, y); g.lineTo(SW / 2, y); g.stroke();
+    }
+    for (let i = -12; i <= 12; i++) {
+      g.strokeStyle = rgba(AI_CYAN, gridA * 0.6);
+      g.beginPath(); g.moveTo(i * 10, horizon); g.lineTo(i * 260, floor); g.stroke();
+    }
+    g.restore();
+    const haze = g.createLinearGradient(0, horizon - 60, 0, horizon + 120);
+    haze.addColorStop(0, rgba(AI_CYAN, 0));
+    haze.addColorStop(0.5, rgba(AI_CYAN, 0.18 * gridA * 2));
+    haze.addColorStop(1, rgba(AI_CYAN, 0));
+    g.fillStyle = haze;
+    g.fillRect(-SW / 2, horizon - 60, SW, 180);
+
+    // Digit rain
+    const rainA = (landed ? 0.55 : 0.3) * outCubic(inv(0, 0.8, t));
+    g.font = `700 38px ${MONO}`;
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    const cols = Math.ceil(SW / 64);
+    for (let c = 0; c < cols; c++) {
+      const r = rng(4000 + c);
+      const speed = 260 + r() * 420, off = r() * 3000, len = 8 + Math.floor(r() * 10);
+      const x = -SW / 2 + 32 + c * 64;
+      const head = ((t * speed + off) % (SH + len * 44 + 200)) - SH / 2 - 100;
+      for (let j = 0; j < len; j++) {
+        const y = head - j * 44;
+        if (y < -SH / 2 - 40 || y > SH / 2 + 40) continue;
+        const glyph = Math.floor(hash(c * 131 + j * 7 + Math.floor(t * 9 + j)) * 10);
+        g.fillStyle = j === 0 ? `rgba(220,255,250,${rainA * 1.4})` : rgba(AI_GREEN, rainA * (1 - j / len));
+        g.fillText(String(glyph), x, y);
+      }
+    }
+
+    // A halo behind the read-out
+    const glowR = landed ? 500 + 30 * Math.sin(t * 5) : 300;
+    const glow = g.createRadialGradient(0, NUMBER_Y, 0, 0, NUMBER_Y, glowR);
+    glow.addColorStop(0, rgba(AI_CYAN, landed ? 0.35 : 0.15));
+    glow.addColorStop(1, rgba(AI_CYAN, 0));
+    g.fillStyle = glow;
+    g.fillRect(-glowR, NUMBER_Y - glowR, glowR * 2, glowR * 2);
+
+    drawFireworks(g, t, tau, SW, SH, pal);
+
+    // Square shockwaves, slightly askew
+    if (landed && tau < 1.3) {
+      for (const [delay, width, turn] of [[0, 50, 0.1], [0.08, 22, -0.15], [0.18, 10, 0.3]]) {
+        const u = clamp((tau - delay) / 1.1);
+        if (u <= 0) continue;
+        const half = 160 + 1500 * outExpo(u);
+        g.save();
+        g.translate(0, NUMBER_Y);
+        g.rotate(turn * u);
+        g.strokeStyle = rgba(AI_CYAN, 0.9 * (1 - u));
+        g.lineWidth = width * (1 - u) + 2;
+        g.strokeRect(-half, -half, half * 2, half * 2);
+        g.restore();
+      }
+    }
+
+    // The read-out. Before the slam: digits scramble, then lock left to right on
+    // one short, then a progress bar fills. At the slam: the milestone, glitching.
+    const appear = outCubic(inv(0.25, 0.7, t));
+    if (appear > 0) {
+      const target = String(landed ? n : n - 1);
+      const fs = target.length >= 4 ? 300 : 380;
+      const slot = fs * 0.72;
+      let text = "";
+      for (let i = 0; i < target.length; i++) {
+        const lockAt = 1.1 + (i + 1) * (0.9 / target.length);
+        text += landed || t >= lockAt ? target[i] : String(Math.floor(hash(i * 977 + Math.floor(t * 24)) * 10));
+      }
+      const scale = landed ? 1 + 0.45 * Math.exp(-tau * 7) * Math.cos(tau * 18) : 0.8 + 0.06 * inv(COUNT_TO, SLAM, t);
+      const paint = (dx, dy, colour, alpha) => {
+        g.globalAlpha = appear * alpha;
+        g.fillStyle = colour;
+        for (let i = 0; i < text.length; i++)
+          g.fillText(text[i], dx + (i - (text.length - 1) / 2) * slot, dy);
+      };
+      g.save();
+      g.translate(0, NUMBER_Y);
+      g.scale(scale, scale);
+      g.font = `700 ${fs}px ${AI_FONT}`;
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      // A glitch: hard for half a second after the slam, then a twitch every few seconds
+      const twitch = landed && (tau < 0.5 || tau % 2.6 < 0.14);
+      const split = landed ? (tau < 0.5 ? 34 * Math.exp(-tau * 5) : twitch ? 14 : 3) : 2;
+      g.globalCompositeOperation = "lighter";
+      paint(-split, 0, "#FF2E63", 0.7);
+      paint(split, 0, AI_CYAN, 0.7);
+      g.globalCompositeOperation = "source-over";
+      g.shadowColor = landed ? AI_CYAN : "rgba(60,240,255,0.4)";
+      g.shadowBlur = landed ? 50 : 20;
+      const face = landed ? "#E8FFFD" : "#9FD8D2";
+      if (twitch) {
+        // sliced into bands, each knocked sideways
+        const bands = 7, top = -fs * 0.42, h = (fs * 0.84) / bands;
+        for (let b = 0; b < bands; b++) {
+          g.save();
+          g.beginPath();
+          g.rect(-2000, top + b * h, 4000, h);
+          g.clip();
+          paint((hash(b * 31 + Math.floor(t * 30)) - 0.5) * 90, 0, face, 1);
+          g.restore();
+        }
+      } else paint(0, 0, face, 1);
+      g.shadowBlur = 0;
+      g.restore();
+      g.globalAlpha = 1;
+
+      if (!landed && t > 1.9) {
+        const u = inv(2.0, 2.85, t);
+        const bw = 520, by = NUMBER_Y + 240;
+        g.strokeStyle = rgba(AI_CYAN, 0.8);
+        g.lineWidth = 4;
+        g.strokeRect(-bw / 2, by, bw, 34);
+        g.fillStyle = rgba(AI_CYAN, 0.85);
+        g.fillRect(-bw / 2 + 6, by + 6, (bw - 12) * u, 22);
+        g.font = `700 30px ${MONO}`;
+        g.fillStyle = rgba(AI_CYAN, 0.9);
+        g.fillText(`PROCESSING ${(u * 99.9).toFixed(1)}%`, 0, by + 80);
+      }
+    }
+
+    // Binary bursts out of the number at the slam
+    if (landed && tau < 4) {
+      for (const d of DICE) {
+        const x = d.vx * tau * 1.1;
+        const y = NUMBER_Y + d.vy * tau + 0.5 * 1300 * tau * tau;
+        if (y - d.size > SH / 2) continue;
+        g.save();
+        g.translate(x, y);
+        g.rotate((d.rot0 + d.spin * tau) * 0.3);
+        g.globalAlpha = clamp(1.4 - tau / 3);
+        g.font = `700 ${d.size}px ${MONO}`;
+        g.fillStyle = d.pal % 3 === 0 ? "#FFFFFF" : d.pal % 3 === 1 ? AI_CYAN : AI_GREEN;
+        g.shadowColor = AI_CYAN;
+        g.shadowBlur = 20;
+        g.fillText(d.face % 2 ? "1" : "0", 0, 0);
+        g.restore();
+      }
+      g.globalAlpha = 1;
+    }
+
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Flash: cyan-white, and it stutters
+    if (landed && tau < 0.5 && Math.floor(tau * 30) % 3 !== 1) {
+      g.fillStyle = `rgba(200,255,250,${0.8 * Math.pow(1 - tau / 0.5, 2)})`;
+      g.fillRect(0, 0, W, H);
+    }
+    // Scanlines and a slow sweep, like an old monitor
+    g.fillStyle = "rgba(0,0,0,0.22)";
+    for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
+    const sweepY = ((t * 0.35) % 1.2) * H - 0.1 * H;
+    const sweep = g.createLinearGradient(0, sweepY - 40, 0, sweepY + 40);
+    sweep.addColorStop(0, "rgba(60,240,255,0)");
+    sweep.addColorStop(0.5, "rgba(60,240,255,0.07)");
+    sweep.addColorStop(1, "rgba(60,240,255,0)");
+    g.fillStyle = sweep;
+    g.fillRect(0, sweepY - 40, W, 80);
   };
 
   return { resize, draw, scale: () => s };
