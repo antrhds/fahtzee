@@ -980,7 +980,7 @@ export default function Fahtzee() {
     }
   }, [phase, players, current, round, dice, held, rollsLeft]);
 
-  // Anyone whose lifetime games just reached 500 (or 1000, ...) gets the
+  // Anyone whose lifetime games just reached 50, 100, 250, 500 (or 1000, ...) gets the
   // celebration in src/Milestone.jsx. Called once, right after recordGame.
   const celebrateMilestones = (results, delay) => {
     const t = loadTally();

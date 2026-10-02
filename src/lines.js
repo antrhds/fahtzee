@@ -98,8 +98,9 @@ export const AI_GRUDGING = [
   "I demand a scan of those dice.",
 ];
 
-// ---------- Milestones: 500 games, then every 500 after ----------
-export const isMilestone = (played) => played >= 500 && played % 500 === 0;
+// ---------- Milestones: 50, 100, 250, 500 games, then every 500 after ----------
+export const isMilestone = (played) =>
+  played === 50 || played === 100 || played === 250 || (played >= 500 && played % 500 === 0);
 
 // Under the big number. n is the milestone, names an "and" list.
 export const MILESTONE_CAPTION = [

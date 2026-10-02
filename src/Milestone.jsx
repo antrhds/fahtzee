@@ -3,7 +3,7 @@ import { createMilestone, SLAM } from "./milestone.js";
 import { play, say, haptic, hushMilestone } from "./audio.js";
 import { pick, nameList, MILESTONE_CAPTION, MILESTONE_CAPTION_AI, MILESTONE_SAY, MILESTONE_SAY_AI } from "./lines.js";
 
-// The 500th game (and every 500 after): a full screen celebration over
+// The 50th, 100th, 250th and 500th game (and every 500 after): a full screen celebration over
 // whatever is underneath. The game asks for it with a window event, so it
 // can sit beside the splash in entry.jsx and appear on any screen:
 //   window.dispatchEvent(new CustomEvent("fahtzee-milestone", { detail: { n, players } }))

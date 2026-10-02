@@ -32,9 +32,9 @@ src/
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
   splash.js    The opening splash, drawn live on a canvas; every frame is a pure f(t)
-  milestone.js The 500th game celebration, drawn live on a canvas; every frame is a pure f(t)
+  milestone.js The milestone (50/100/250/500/every 500) celebration, drawn live on a canvas; every frame is a pure f(t)
   Milestone.jsx Shows it when App fires the `fahtzee-milestone` window event after recordGame
-               finds a player's lifetime `played` at 500, 1000, ... (isMilestone in lines.js)
+               finds a player's lifetime `played` at 50, 100, 250, 500, 1000, ... (isMilestone in lines.js)
   Splash.jsx   Once per session (sessionStorage): a Tap to play card, whose tap starts
                the animation AND its soundtrack (phones need a tap for sound); 2nd tap skips
   splash-audio.js  GENERATED soundtrack (base64 MP3, ~57 KB): never hand edit

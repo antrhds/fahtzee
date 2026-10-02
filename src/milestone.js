@@ -1,5 +1,5 @@
-// The milestone celebration: a counter races up to 500 (or 1000, ...), stalls
-// on 499 for a heartbeat, then slams home in a flash, a shockwave, a burst of
+// The milestone celebration: a counter races up to 50, 100, 250, 500 (or 1000,
+// ...), stalls one short for a heartbeat, then slams home in a flash, a shockwave, a burst of
 // dice and fireworks that keep going until someone taps. Drawn live on a
 // canvas, and like the splash every frame is a pure function of the time t,
 // so dropped frames simply catch up and a test can draw any moment it likes.

@@ -1,5 +1,5 @@
-// The 500th game: finishing the game that takes a player to 500 lifetime games
-// sets off the celebration; 499 does not; it stays until tapped, ignores the
+// Milestones: finishing the game that takes a player to 50, 100, 250 or 500
+// lifetime games (then every 500) sets off the celebration; 499 does not; it stays until tapped, ignores the
 // taps that finished the game, and the AI gets its own (smug) version.
 //   node test/milestone.js            (SHOTS=dir to save screenshots)
 // Playwright against the built index.html, at Tony's phone size.
@@ -131,7 +131,24 @@ const milestone = (page) => page.getAttribute("[data-milestone]", "data-mileston
   if (shots) await page.screenshot({ path: path.join(shots, "milestone-ai.png") });
   await ctx.close();
 
-  // 4. Reduced motion: a still, finished frame, no animation
+  // 4. The smaller milestones fire with their own number; near misses stay quiet
+  for (const [before, fires] of [[49, true], [99, true], [249, true], [149, false], [749, false], [999, true]]) {
+    ({ ctx, page, errors } = await finishGame(browser, before, 10));
+    await page.waitForTimeout(4300);
+    const label = (await page.locator("[data-milestone]").count())
+      ? await page.getAttribute("[data-milestone]", "aria-label") : "";
+    const n = before + 1;
+    check(`game ${n}: ${fires ? "celebrates " + n : "stays quiet"}`,
+      fires ? label.startsWith(`${n} games`) : label === "", label);
+    if (shots && n === 50) {
+      await page.waitForTimeout(3500);
+      await page.screenshot({ path: path.join(shots, "milestone-50.png") });
+    }
+    check(`no page errors (game ${n})`, errors.length === 0, errors.join(" | "));
+    await ctx.close();
+  }
+
+  // 5. Reduced motion: a still, finished frame, no animation
   ({ ctx, page, errors } = await finishGame(browser, 499, 10, { reducedMotion: "reduce" }));
   await page.waitForTimeout(4200);
   check("reduced motion still celebrates (as a still)", (await milestone(page)) === "on");
