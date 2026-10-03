@@ -166,7 +166,7 @@ const milestone = (page) => page.getAttribute("[data-milestone]", "data-mileston
   await ctx.close();
 
   // 6. Badges: one per milestone, in the lobby, each one a replay
-  const SKINS = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
+  const SKINS = ["dark", "light", "comic", "sweets", "neon", "casino", "resistance"];
   for (const skin of SKINS) {
     ctx = await browser.newContext({ viewport: { width: 360, height: 900 } });
     page = await ctx.newPage();

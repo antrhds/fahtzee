@@ -15,7 +15,8 @@ const CHOSEN = ["#FF5A5F", "#4CC9F0"]; // Red and Blue, as stored by the lobby
 const EXPECTED = {
   dark: "rgb(255, 90, 95)", // #FF5A5F, unchanged
   light: "rgb(255, 90, 95)",
-  tabletop: "rgb(255, 90, 95)",
+  comic: "rgb(232, 34, 46)", // #E8222E, comic red
+  sweets: "rgb(255, 75, 114)", // #FF4B72, strawberry
   casino: "rgb(255, 90, 95)",
   neon: "rgb(255, 46, 99)", // #FF2E63, the neon-tuned red
   resistance: "rgb(192, 73, 43)", // #C0492B, rust

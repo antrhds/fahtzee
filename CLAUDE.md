@@ -106,8 +106,9 @@ every release, and extend it rather than writing throwaway scripts:
 ```
 test/streaks.js   Stats panel narrative lines, the pre-v2.7 tally migration,
                   and the empty device. jsdom.
-test/skins.js     Every skin renders at 360px with no page errors and no
-                  horizontal overflow. Playwright.
+test/skins.js     Every skin renders the lobby and a turn at 360px with no page errors
+                  and no horizontal overflow; the corner button cycles all seven; a
+                  stored `tabletop` opens in Comic. Playwright.
 test/dice-colours.js  Per-skin die colours are a render-time remap only: the
                   stored hex must survive every skin. Playwright.
 test/splash.js    The splash waits on its card, the tap starts animation and sound
@@ -118,13 +119,13 @@ test/splash.js    The splash waits on its card, the tap starts animation and sou
 test/milestone.js Milestones: 499 stays quiet, 500 celebrates after the win lands,
                   50/100/250/1000 fire and 150/750 do not, early taps do not skip it,
                   a tap after dismisses it, the AI's own style, reduced motion, and the
-                  lobby's Badges panel in all six skins (counts, replays, empty device).
+                  lobby's Badges panel in all seven skins (counts, replays, empty device).
                   SHOTS=dir saves screenshots. Playwright.
 test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not, early taps
                   do not skip it, it leaves by itself, "Fahtzee" is said exactly once, the AI
-                  waits for it before scoring, all six skins, reduced motion. Math.random is
+                  waits for it before scoring, all seven skins, reduced motion. Math.random is
                   replaced before boot to load the dice. SHOTS=dir saves screenshots.
-test/undo.js      The undo button goes with the next turn's first roll in all six skins, and
+test/undo.js      The undo button goes with the next turn's first roll in all seven skins, and
                   with the first roll-off roll; undoing the final score takes the recorded
                   game back off the books so re-banking it counts once.
 test/ai.js        Plays N (default 300) seeded solo games per AI level straight from src/ai.js:
@@ -177,26 +178,36 @@ happened.
 
 ## 4. Conventions and gotchas learned the hard way
 
-**Skins.** Six: `dark`, `light`, `tabletop`, `neon`, `casino`, `resistance`, cycled in that order by
+**Skins.** Seven: `dark`, `light`, `comic`, `sweets`, `neon`, `casino`, `resistance`, cycled in that order by
 the corner button and persisted in localStorage under `fahtzee-skin`. The button shows
 the *next* skin's icon, not the current one. `T` is a module level variable reassigned
 each render to `THEMES[skin]`. Themes carry not just colours but construction tokens:
 `cardBorder`, `cardShadow`, `dieBorder`, `dieFace`, `diePip`, `dieColours`, `colourGlow`,
 `held`, `rosterBand`, `btnBorder`, `btnShadow`, `btnCase`, `btn`, `font`, `displayFont`,
-`wordmark`, `wordmarkShadow`, `overlay`, `placeholder`, `sectionText`. **Every skin must define every token** — a missing one is
+`wordmark`, `wordmarkShadow`, `overlay`, `placeholder`, `sectionText`, and since v2.19 `btnFont`, `cardRadius`,
+`link`, `pick` (the selected AI toggle and level), `wordmarkFill`/`wordmarkStroke` (clipped
+text fill, Sweet Shop's candy cane), `wordmarkBadge` (Comic's starburst), `dieGloss` and
+`dieInset` (layers over a coloured die: Comic's dots, Sweet Shop's sugar shine) and `board`.
+Comic and Sweet Shop set them inline; the older five get them in one explicit `Object.assign`.
+**Every skin must define every token** — a missing one is
 `undefined`, not a fallback. (The one conditional token is `wordmarkShadow`, read only
-when `wordmark` is set; dark and light leave `wordmark` null and use a gradient instead.) Tabletop has its own full playing screen layout (a separate
-`if (skin === "tabletop")` branch before the Classic return) with a scoreboard plaque, a
-board, and tile scorecard; the other four share the Classic layout and so inherit its
-fixes for free. **Never edit theme values from inside a bulk find and replace over colour
+when `wordmark` is set; dark and light leave `wordmark` null and use a gradient instead.)
+There are two playing screens. A skin with a `board` token (Comic, Sweet Shop) gets the board
+screen, an `if (T.board)` branch before the Classic return: scoreboard plaque, dice on a
+board, tile scorecard, all coloured from `board` (ink, paper, plaque, tabs, radius, shadow,
+an optional `caption` box and `font`). `board: null` (the other five) gets Classic. Fix a
+playing-screen bug in both. The board screen was built for Tabletop, retired in v2.19;
+`RETIRED_SKINS` maps a stored `tabletop` to `comic`, and must keep doing so.
+**Never edit theme values from inside a bulk find and replace over colour
 strings** — doing so once made the THEMES object self referential and crashed the app.
 
 **Add capability as a token, not a branch.** When a skin needs something the tokens
-cannot express, add a token and set it for all five, rather than an `if (skin === ...)`
+cannot express, add a token and set it for every skin, rather than an `if (skin === ...)`
 inside a component. `dieFace`, `diePip`, `displayFont`, `wordmarkShadow`, `dieColours`,
 `colourGlow`, `held` and `rosterBand` were all added this way. The moment themes stop being data, they stop being safe to edit.
 
-**Fonts.** Tabletop uses Baloo 2, Neon uses Audiowide, both from Google Fonts in a single
+**Fonts.** Comic uses Bangers and Comic Neue, Sweet Shop Fredoka and Titan One, Neon and
+Resistance Audiowide; Baloo 2 is still loaded for the splash, milestone and cut-scene canvases. All from Google Fonts in a single
 request, loaded non blocking (`media="print" onload="this.media='all'"`) with a
 `<noscript>` fallback. Never make a font render blocking: a blank page caused by a slow
 font request cost this project days of debugging. Note `font` is applied at the app root,
@@ -223,11 +234,11 @@ Resistance clamps in ink because gold made a third warm colour on bone.
 
 **`rosterBand`** paints a panel behind the lobby's name rows. `null` for every
 skin but Resistance, which insets them into slate. If you touch the lobby, check
-the gap between name inputs is still 14px in all six: the rows are wrapped in a
+the gap between name inputs is still 14px in all seven: the rows are wrapped in a
 flex child, and it is easy to shift the spacing everywhere without noticing.
 
 **Responsive.** Tony's phone is ~360 CSS px. Flex children holding inputs need
-`minWidth: 0` or they overflow. Tabletop board dice are sized from `window.innerWidth`,
+`minWidth: 0` or they overflow. Board-screen dice are sized from `window.innerWidth`,
 not fixed.
 
 **Async safety.** `gameIdRef` is a generation counter. Bump it on new game, undo and
