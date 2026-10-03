@@ -108,7 +108,8 @@ test/streaks.js   Stats panel narrative lines, the pre-v2.7 tally migration,
                   and the empty device. jsdom.
 test/skins.js     Every skin renders the lobby and a turn at 360px with no page errors
                   and no horizontal overflow; the corner button cycles all seven; a
-                  stored `tabletop` opens in Comic. Playwright.
+                  stored `tabletop` opens in Comic; Comic and Sweet Shop fit a turn in
+                  360 x 727 with no scrolling. Playwright.
 test/dice-colours.js  Per-skin die colours are a render-time remap only: the
                   stored hex must survive every skin. Playwright.
 test/splash.js    The splash waits on its card, the tap starts animation and sound
@@ -187,7 +188,8 @@ each render to `THEMES[skin]`. Themes carry not just colours but construction to
 `wordmark`, `wordmarkShadow`, `overlay`, `placeholder`, `sectionText`, and since v2.19 `btnFont`, `cardRadius`,
 `link`, `pick` (the selected AI toggle and level), `wordmarkFill`/`wordmarkStroke` (clipped
 text fill, Sweet Shop's candy cane), `wordmarkBadge` (Comic's starburst), `dieGloss` and
-`dieInset` (layers over a coloured die: Comic's dots, Sweet Shop's sugar shine) and `board`.
+`dieInset` (layers over a coloured die: Comic's dots, Sweet Shop's sugar shine), `board`, and
+`inkPage` (v2.20: Comic's ink for the handoff, results and roll-off; `null` elsewhere keeps the soft look).
 Comic and Sweet Shop set them inline; the older five get them in one explicit `Object.assign`.
 **Every skin must define every token** — a missing one is
 `undefined`, not a fallback. (The one conditional token is `wordmarkShadow`, read only
@@ -195,7 +197,10 @@ when `wordmark` is set; dark and light leave `wordmark` null and use a gradient 
 There are two playing screens. A skin with a `board` token (Comic, Sweet Shop) gets the board
 screen, an `if (T.board)` branch before the Classic return: scoreboard plaque, dice on a
 board, tile scorecard, all coloured from `board` (ink, paper, plaque, tabs, radius, shadow,
-an optional `caption` box and `font`). `board: null` (the other five) gets Classic. Fix a
+an optional `caption` box and `font`). `board: null` (the other five) gets Classic.
+The board screen calls `shell(children, true)`: compact, a shorter wordmark and less padding,
+so a whole turn fits Tony's 360 x 727 screen without scrolling. `test/skins.js` holds it to
+that with two and four players after a roll, using fallback fonts, so leave it headroom. Fix a
 playing-screen bug in both. The board screen was built for Tabletop, retired in v2.19;
 `RETIRED_SKINS` maps a stored `tabletop` to `comic`, and must keep doing so.
 **Never edit theme values from inside a bulk find and replace over colour
@@ -276,9 +281,9 @@ them back; otherwise undoing the final score and banking it again counts the gam
 
 **iOS.** `purgeUndoStack()` defuses Apple's shake to undo dialogue. Do not remove it.
 
-**Known rough edge.** The version link in the lobby header is a hardcoded blue, not a
-token, so it sits oddly on Casino's baize. Fixing it means adding a `link` token to all
-five skins.
+**Known rough edge.** The version link in the lobby header is the `link` token (v2.19),
+but the older five all still use the same blue, which sits oddly on Casino's baize. Fixing
+it is now just a token value per skin.
 
 **Deployment.** GitHub Pages serves the last *successful* build. Failed or queued builds
 are silent — the old version just keeps being served. If Tony says an update has not

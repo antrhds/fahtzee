@@ -348,6 +348,14 @@ THEMES.comic = {
   rosterBand: null,
   link: "#1F6FE0",
   pick: { ink: INK, border: INK, bg: COMIC_YELLOW },
+  // The pages between turns (handoff, results), inked to match the board
+  inkPage: {
+    font: "'Bangers', 'Impact', system-ui, sans-serif",
+    border: `3px solid ${INK}`, shadow: `6px 6px 0 ${INK}`, chipShadow: `3px 3px 0 ${INK}`, radius: 8,
+    rule: `2.5px solid ${INK}`, highlight: COMIC_YELLOW, headline: "#FFFFFF",
+    outline: `2px 2px 0 ${INK}, -1.5px -1.5px 0 ${INK}, 1.5px -1.5px 0 ${INK}, -1.5px 1.5px 0 ${INK}`,
+    lift: `4px 4px 0 ${COMIC_RED}`,
+  },
   held: { ring: INK, halo: "rgba(255,224,0,0.95)", face: `linear-gradient(160deg, ${COMIC_YELLOW}, #FFC700)` },
   board: {
     ink: INK, inkRgb: "17,17,17", paper: "#FFFFFF", tile: "#FFFFFF", plaque: INK, plaqueText: "#FFFFFF",
@@ -400,6 +408,7 @@ THEMES.sweets = {
   colourGlow: false,
   rosterBand: null,
   link: "#E83A86",
+  inkPage: null,
   pick: { ink: "#D62F78", border: "#E83A86", bg: "rgba(255,95,162,0.14)" },
   held: { ring: CHOC, halo: "rgba(255,95,162,0.45)", face: "linear-gradient(160deg, #FFE066, #FFB84D)" },
   board: {
@@ -412,7 +421,7 @@ THEMES.sweets = {
 // The older five: the newer construction tokens, set explicitly so nothing is undefined.
 // board: null keeps them on the Classic playing screen
 for (const s of ["dark", "light", "neon", "casino", "resistance"]) {
-  Object.assign(THEMES[s], { link: "#4CC9F0", pick: { ink: "#4CC9F0", border: "#4CC9F0", bg: "rgba(76,201,240,0.13)" }, btnFont: null, cardRadius: 20, wordmarkFill: null, wordmarkStroke: null, wordmarkBadge: null, dieGloss: null, dieInset: null, board: null });
+  Object.assign(THEMES[s], { inkPage: null, link: "#4CC9F0", pick: { ink: "#4CC9F0", border: "#4CC9F0", bg: "rgba(76,201,240,0.13)" }, btnFont: null, cardRadius: 20, wordmarkFill: null, wordmarkStroke: null, wordmarkBadge: null, dieGloss: null, dieInset: null, board: null });
 }
 
 // A comic starburst: sixteen spikes round an ellipse, as a CSS clip-path
@@ -1257,7 +1266,8 @@ export default function Fahtzee() {
   }, [phase, players, rolloff]);
 
   // ---------- Shared shell ----------
-  const shell = (children) => (
+  // compact: the board playing screen, which must fit a phone without scrolling
+  const shell = (children, compact = false) => (
     <div
       style={{
         minHeight: "100vh",
@@ -1266,7 +1276,7 @@ export default function Fahtzee() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "22px 12px 48px",
+        padding: compact ? "18px 12px 16px" : "22px 12px 48px",
         color: T.text,
       }}
     >
@@ -1292,10 +1302,10 @@ export default function Fahtzee() {
         button:focus-visible, input:focus-visible { outline: 3px solid #FFD23F; }
         input::placeholder { color: ${T.placeholder}; }
       `}</style>
-      <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", ...(T.wordmarkBadge ? { height: 138, marginTop: -8, marginBottom: 4 } : null) }}>
+      <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", ...(compact ? { height: 88, marginTop: -6, marginBottom: 2 } : T.wordmarkBadge ? { height: 138, marginTop: -8, marginBottom: 4 } : null) }}>
       {T.wordmarkBadge && (
-        <div aria-hidden="true" style={{ position: "absolute", width: 310, height: 128, background: T.wordmarkBadge.border, clipPath: BURST, transform: "rotate(-4deg)" }}>
-          <div style={{ position: "absolute", inset: 6, background: T.wordmarkBadge.background, clipPath: BURST }} />
+        <div aria-hidden="true" style={{ position: "absolute", width: compact ? 214 : 310, height: compact ? 84 : 128, background: T.wordmarkBadge.border, clipPath: BURST, transform: "rotate(-4deg)" }}>
+          <div style={{ position: "absolute", inset: compact ? 4.5 : 6, background: T.wordmarkBadge.background, clipPath: BURST }} />
         </div>
       )}
       <h1
@@ -1306,9 +1316,9 @@ export default function Fahtzee() {
           margin: "0 0 2px",
           transform: skin === "neon" ? "none" : "rotate(-2deg)",
           fontFamily: T.displayFont,
-          ...(T.wordmarkBadge ? { position: "relative", zIndex: 1, fontSize: 50, letterSpacing: "0.04em", margin: "6px 0 10px" } : null),
+          ...(T.wordmarkBadge ? { position: "relative", zIndex: 1, fontSize: compact ? 34 : 50, letterSpacing: "0.04em", margin: compact ? "4px 0 6px" : "6px 0 10px" } : null),
           ...(T.wordmarkFill
-            ? { background: T.wordmarkFill, WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", WebkitTextStroke: T.wordmarkStroke, fontSize: 50, fontWeight: 400, letterSpacing: "0.01em", filter: "drop-shadow(0 4px 0 rgba(91,52,35,0.35))" }
+            ? { background: T.wordmarkFill, WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", WebkitTextStroke: T.wordmarkStroke, fontSize: compact ? 38 : 50, fontWeight: 400, letterSpacing: "0.01em", filter: "drop-shadow(0 4px 0 rgba(91,52,35,0.35))" }
             : T.wordmark
             ? { color: T.wordmark, textShadow: T.wordmarkShadow }
             : {
@@ -1967,9 +1977,10 @@ export default function Fahtzee() {
 
   // ---------- Handoff screen ----------
   if (phase === "handoff") {
+    const K = T.inkPage; // Comic inks this page; everyone else keeps the soft look
     return shell(
       <>
-        <p style={{ color: T.sub60, margin: "4px 0 44px", fontSize: 14 }}>
+        <p style={{ color: T.sub60, margin: "4px 0 44px", fontSize: 14, ...(K ? { fontFamily: K.font, fontSize: 24, letterSpacing: "0.08em", color: T.text, margin: "0 0 30px" } : null) }}>
           Round {round} of 13
         </p>
         <div
@@ -1979,17 +1990,17 @@ export default function Fahtzee() {
             flexDirection: "column",
             alignItems: "center",
             background: T.card,
-            border: `2px solid ${skinColour(player.colour)}`,
-            borderRadius: 24,
+            border: K ? K.border : `2px solid ${skinColour(player.colour)}`,
+            borderRadius: K ? K.radius : 24,
             padding: "30px 40px",
             marginBottom: 30,
-            boxShadow: `0 0 30px ${skinColour(player.colour)}33`,
+            boxShadow: K ? K.shadow : `0 0 30px ${skinColour(player.colour)}33`,
           }}
         >
-          <div style={{ fontSize: 15, color: T.sub60, marginBottom: 6 }}>
+          <div style={{ fontSize: 15, color: T.sub60, marginBottom: 6, ...(K ? { fontSize: 17, fontWeight: 700, color: T.text } : null) }}>
             {player.isBot ? "Sit back, it is" : "Pass the phone to"}
           </div>
-          <div style={{ fontSize: 34, fontWeight: 900, color: skinColour(player.colour), marginBottom: 18, textShadow: colourGlowFor(skinColour(player.colour), 1.3) || "none" }}>
+          <div style={{ fontSize: 34, fontWeight: 900, color: skinColour(player.colour), marginBottom: 18, textShadow: colourGlowFor(skinColour(player.colour), 1.3) || "none", ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 54, lineHeight: 1.05, letterSpacing: "0.04em", textShadow: K.outline } : null) }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               {player.name} {player.isBot ? <BotIcon size={28} /> : null}
             </span>
@@ -2006,17 +2017,18 @@ export default function Fahtzee() {
             <div
               key={i}
               style={{
-                background: T.card,
-                border: `1px solid ${i === current ? skinColour(p.colour) : T.border}`,
-                borderRadius: 14,
+                background: K && i === current ? K.highlight : T.card,
+                border: K ? K.border : `1px solid ${i === current ? skinColour(p.colour) : T.border}`,
+                boxShadow: K ? K.chipShadow : "none",
+                borderRadius: K ? K.radius : 14,
                 padding: "8px 14px",
                 fontSize: 14,
                 textAlign: "center",
                 minWidth: 74,
               }}
             >
-              <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>{p.name}</div>
-              <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{totalsFor(p).grand}</div>
+              <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none", ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 20, letterSpacing: "0.05em", textShadow: K.outline } : null) }}>{p.name}</div>
+              <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 26, lineHeight: 1 } : null) }}>{totalsFor(p).grand}</div>
             </div>
           ))}
         </div>
@@ -2034,6 +2046,7 @@ export default function Fahtzee() {
               background: "transparent",
               color: T.sub55,
               cursor: "pointer",
+              ...(K ? { border: K.rule, background: T.card, color: T.text, boxShadow: K.chipShadow, fontSize: 14 } : null),
             }}
           >
             ↩ Undo {undoSnap.players[undoSnap.current].name}'s last score
@@ -2045,6 +2058,7 @@ export default function Fahtzee() {
 
   // ---------- Game over screen ----------
   if (phase === "over") {
+    const K = T.inkPage;
     const ranked = players
       .map((p, i) => ({ ...p, idx: i, total: totalsFor(p).grand }))
       .sort((a, b) => b.total - a.total);
@@ -2081,7 +2095,7 @@ export default function Fahtzee() {
       <>
         {(!isTie || rolloffWinnerIdx !== null) && <Confetti />}
         <div style={{ fontSize: 50, margin: "18px 0 6px" }}>{isTie && rolloffWinnerIdx === null ? "⚔️" : "🏆"}</div>
-        <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 20, textAlign: "center", animation: "pop 0.4s ease" }}>
+        <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 20, textAlign: "center", animation: "pop 0.4s ease", ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "0.04em", color: K.headline, textShadow: `${K.outline}, ${K.lift}` } : null) }}>
           {headline}
         </div>
 
@@ -2092,8 +2106,9 @@ export default function Fahtzee() {
               width: "100%",
               maxWidth: 380,
               background: T.card,
-              border: "1px solid rgba(255,210,63,0.4)",
-              borderRadius: 20,
+              border: K ? K.border : "1px solid rgba(255,210,63,0.4)",
+              boxShadow: K ? K.shadow : "none",
+              borderRadius: K ? K.radius : 20,
               padding: "18px 18px 20px",
               marginBottom: 22,
               display: "flex",
@@ -2116,7 +2131,7 @@ export default function Fahtzee() {
                 {rolloffDice && (
                   <div style={{ display: "flex", gap: 8 }}>
                     {rolloffDice.map((d, i) => (
-                      <Die key={i} value={d} held={false} rolling={rolloffRolling} disabled colour={nextToRoll !== undefined ? skinColour(players[nextToRoll].colour) : players[rolloff.contenders[rolloff.contenders.length - 1]].colour} />
+                      <Die key={i} size={50} value={d} held={false} rolling={rolloffRolling} disabled colour={nextToRoll !== undefined ? skinColour(players[nextToRoll].colour) : players[rolloff.contenders[rolloff.contenders.length - 1]].colour} />
                     ))}
                   </div>
                 )}
@@ -2131,15 +2146,17 @@ export default function Fahtzee() {
                         padding: "8px 12px",
                         borderRadius: 12,
                         background: cIdx === nextToRoll ? "rgba(255,210,63,0.12)" : T.section,
+                        color: cIdx === nextToRoll ? T.text : T.sectionText,
                         border: `1px solid ${cIdx === rolloffWinnerIdx ? "#FFD23F" : T.border2}`,
+                        ...(K ? { border: K.rule, borderRadius: K.radius, background: cIdx === nextToRoll ? K.highlight : T.section } : null),
                       }}
                     >
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: skinColour(players[cIdx].colour) }} />
-                      <span style={{ flex: 1, fontWeight: 800, fontSize: 15 }}>{players[cIdx].name}</span>
-                      <span style={{ fontSize: 11, color: T.sub45, fontWeight: 700, marginRight: 8 }}>
+                      <span style={{ flex: 1, fontWeight: 800, fontSize: 15, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 21, letterSpacing: "0.05em" } : null) }}>{players[cIdx].name}</span>
+                      <span style={{ fontSize: 11, opacity: 0.6, fontWeight: 700, marginRight: 8 }}>
                         {(rolloff.rollsTaken[cIdx] || 0)}/3
                       </span>
-                      <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 16 }}>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 16, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 24 } : null) }}>
                         {rolloff.results[cIdx] !== undefined ? rolloff.results[cIdx] : "—"}
                       </span>
                     </div>
@@ -2176,7 +2193,7 @@ export default function Fahtzee() {
             background: T.card,
             border: T.cardBorder,
             boxShadow: T.cardShadow,
-            borderRadius: 20,
+            borderRadius: K ? K.radius : 20,
             overflow: "hidden",
             marginBottom: 30,
           }}
@@ -2191,20 +2208,20 @@ export default function Fahtzee() {
                   alignItems: "center",
                   gap: 12,
                   padding: "13px 18px",
-                  borderBottom: i < ranked.length - 1 ? `1px solid ${T.border2}` : "none",
+                  borderBottom: i < ranked.length - 1 ? (K ? K.rule : `1px solid ${T.border2}`) : "none",
                   background: isChamp
-                    ? "rgba(255,210,63,0.14)"
+                    ? (K ? K.highlight : "rgba(255,210,63,0.14)")
                     : p.total === topScore
                     ? "rgba(255,210,63,0.06)"
                     : "transparent",
                 }}
               >
-                <span style={{ fontWeight: 800, color: T.sub50, width: 28 }}>{positionLabel(p)}</span>
-                <div style={{ width: 12, height: 12, borderRadius: "50%", background: skinColour(p.colour) }} />
-                <span style={{ flex: 1, fontWeight: 800, fontSize: 16 }}>
+                <span style={{ fontWeight: 800, color: T.sub50, width: 28, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 24, color: T.text } : null) }}>{positionLabel(p)}</span>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: skinColour(p.colour), ...(K ? { width: 16, height: 16, border: K.rule } : null) }} />
+                <span style={{ flex: 1, fontWeight: 800, fontSize: 16, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 24, letterSpacing: "0.05em" } : null) }}>
                   {p.name} {isChamp ? "👑" : ""}
                 </span>
-                <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 18 }}>{p.total}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, fontSize: 18, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 30 } : null) }}>{p.total}</span>
               </div>
             );
           })}
@@ -2224,6 +2241,7 @@ export default function Fahtzee() {
               background: "transparent",
               color: T.sub55,
               cursor: "pointer",
+              ...(K ? { border: K.rule, background: T.card, color: T.text, boxShadow: K.chipShadow, fontSize: 14 } : null),
             }}
           >
             ↩ Undo {undoSnap.players[undoSnap.current].name}'s last score
@@ -2340,8 +2358,8 @@ export default function Fahtzee() {
             justifyContent: "space-between",
             alignItems: "center",
             width: "100%",
-            marginTop: 6,
-            padding: "8px 10px",
+            marginTop: 4,
+            padding: "5px 10px",
             borderRadius: 10,
             border: scored ? `2.5px solid ${ink(0.3)}` : `2.5px solid ${CHT}`,
             background: scored ? ink(0.07) : B.tile,
@@ -2370,7 +2388,7 @@ export default function Fahtzee() {
     const Tab = ({ colour, label }) => (
       <div
         style={{
-          padding: "7px 10px",
+          padding: "5px 10px",
           borderRadius: 10,
           border: `3px solid ${CHT}`,
           background: colour,
@@ -2380,7 +2398,7 @@ export default function Fahtzee() {
           color: CHT,
           textAlign: "center",
           ...BF,
-          ...(BF ? { fontSize: 17, padding: "4px 10px" } : null),
+          ...(BF ? { fontSize: 17, padding: "2px 10px" } : null),
         }}
       >
         {label}
@@ -2388,7 +2406,7 @@ export default function Fahtzee() {
     );
     return shell(
       <>
-        {/* Scoreboard plaque */}
+        {/* Scoreboard plaque, with the round on it */}
         <div
           style={{
             width: "100%",
@@ -2397,26 +2415,27 @@ export default function Fahtzee() {
             border: `3px solid ${CHT}`,
             borderRadius: Math.min(18, B.radius),
             boxShadow: B.shadow,
-            display: "flex",
-            justifyContent: "space-around",
-            padding: "10px 8px 8px",
-            marginTop: 6,
+            padding: "5px 8px 6px",
+            marginTop: 4,
+            marginBottom: 10,
           }}
         >
-          {players.map((p, i) => (
-            <div key={i} style={{ textAlign: "center", opacity: i === current ? 1 : 0.7, minWidth: 64 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: skinColour(p.colour), letterSpacing: "0.06em", textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none", ...BF, ...(BF ? { fontSize: 17 } : null) }}>
-                {p.name.toUpperCase()}
+          <div style={{ textAlign: "center", fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", color: B.plaqueText, opacity: 0.6, ...BF, ...(BF ? { fontSize: 14, letterSpacing: "0.12em" } : null) }}>
+            ROUND {round} OF 13
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-around" }}>
+            {players.map((p, i) => (
+              <div key={i} style={{ textAlign: "center", opacity: i === current ? 1 : 0.7, minWidth: 64 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: skinColour(p.colour), letterSpacing: "0.06em", textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none", ...BF, ...(BF ? { fontSize: 16 } : null) }}>
+                  {p.name.toUpperCase()}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: B.plaqueText, fontVariantNumeric: "tabular-nums", lineHeight: 1.1, ...BF, ...(BF ? { fontSize: 28, lineHeight: 1 } : null) }}>
+                  {totalsFor(p).grand}
+                </div>
+                <div style={{ height: 3, background: i === current ? skinColour(p.colour) : "transparent", borderRadius: 2, marginTop: 3 }} />
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: B.plaqueText, fontVariantNumeric: "tabular-nums", ...BF, ...(BF ? { fontSize: 34, lineHeight: 1 } : null) }}>
-                {totalsFor(p).grand}
-              </div>
-              <div style={{ height: 3, background: i === current ? skinColour(p.colour) : "transparent", borderRadius: 2, marginTop: 2 }} />
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.22em", color: ink(0.6), margin: "10px 0 12px", ...BF, ...(BF ? { fontSize: 17, letterSpacing: "0.14em", color: CHT } : null) }}>
-          ROUND {round} OF 13
+            ))}
+          </div>
         </div>
 
         {/* The board */}
@@ -2428,21 +2447,21 @@ export default function Fahtzee() {
             border: `4px solid ${CHT}`,
             borderRadius: B.radius,
             boxShadow: B.shadow,
-            padding: "12px 10px 16px",
+            padding: "10px 10px 12px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            marginBottom: 16,
+            marginBottom: 8,
           }}
         >
-          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.16em", marginBottom: 10, ...(B.caption ? { background: B.caption, color: CHT, border: `2.5px solid ${CHT}`, padding: "5px 10px", transform: "rotate(-1deg)", boxShadow: `3px 3px 0 ${CHT}`, ...BF, fontSize: 16, letterSpacing: "0.05em" } : { color: ink(0.55) }) }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.16em", marginBottom: 8, ...(B.caption ? { background: B.caption, color: CHT, border: `2.5px solid ${CHT}`, padding: "5px 10px", transform: "rotate(-1deg)", boxShadow: `3px 3px 0 ${CHT}`, ...BF, fontSize: 16, letterSpacing: "0.05em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(100% - 8px)" } : { color: ink(0.55) }) }}>
             {player.isBot
               ? "THE AI IS PLAYING"
               : hasRolled
               ? `${player.name.toUpperCase()}'S ROLL · ${rollsLeft} LEFT · TAP DICE TO HOLD`
               : `${player.name.toUpperCase()}'S TURN · ${shakeStatus === "on" ? "SHAKE OR " : ""}TAP TO ROLL`}
           </div>
-          <div style={{ display: "flex", gap: boardDie > 56 ? 8 : 6, marginBottom: 14, maxWidth: "100%" }}>
+          <div style={{ display: "flex", gap: boardDie > 56 ? 8 : 6, marginBottom: 10, maxWidth: "100%" }}>
             {dice.map((d, i) => (
               <Die
                 key={i}
@@ -2498,7 +2517,7 @@ export default function Fahtzee() {
             border: `4px solid ${CHT}`,
             borderRadius: B.radius,
             boxShadow: B.shadow,
-            padding: "10px 10px 12px",
+            padding: "6px 10px 10px",
           }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, alignItems: "start" }}>
@@ -2509,8 +2528,8 @@ export default function Fahtzee() {
               ))}
               <div
                 style={{
-                  marginTop: 6,
-                  padding: "8px 10px",
+                  marginTop: 4,
+                  padding: "5px 10px",
                   borderRadius: 10,
                   border: `2.5px dashed ${ink(0.35)}`,
                   fontSize: 12,
@@ -2532,8 +2551,8 @@ export default function Fahtzee() {
               {player.yahtzeeBonuses > 0 && (
                 <div
                   style={{
-                    marginTop: 6,
-                    padding: "8px 10px",
+                    marginTop: 4,
+                    padding: "5px 10px",
                     borderRadius: 10,
                     border: `2.5px dashed ${ink(0.35)}`,
                     fontSize: 12,
@@ -2548,23 +2567,6 @@ export default function Fahtzee() {
                 </div>
               )}
             </div>
-          </div>
-          <div
-            style={{
-              marginTop: 10,
-              padding: "10px 14px",
-              borderRadius: 12,
-              background: BROWNT,
-              border: `3px solid ${CHT}`,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ fontSize: 15, fontWeight: 800, color: B.plaqueText, letterSpacing: "0.08em", ...BF, ...(BF ? { fontSize: 22 } : null) }}>TOTAL</span>
-            <span style={{ fontSize: 21, fontWeight: 800, color: B.accent, fontVariantNumeric: "tabular-nums", ...BF, ...(BF ? { fontSize: 30 } : null) }}>
-              {t.grand}
-            </span>
           </div>
         </div>
 
@@ -2588,7 +2590,8 @@ export default function Fahtzee() {
             ↩ Undo {undoSnap.players[undoSnap.current].name}'s last score
           </button>
         )}
-      </>
+      </>,
+      true
     );
   }
 
