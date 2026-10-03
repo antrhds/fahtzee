@@ -1,5 +1,5 @@
 // Fahtzee constants
-export const VERSION = "v2.16";
+export const VERSION = "v2.17";
 
 // ---------- Colour choices ----------
 export const COLOUR_CHOICES = [

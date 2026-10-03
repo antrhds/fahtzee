@@ -20,7 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js (Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
@@ -122,6 +122,9 @@ test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not,
                   do not skip it, it leaves by itself, "Fahtzee" is said exactly once, the AI
                   waits for it before scoring, all six skins, reduced motion. Math.random is
                   replaced before boot to load the dice. SHOTS=dir saves screenshots.
+test/undo.js      The undo button goes with the next turn's first roll in all six skins, and
+                  with the first roll-off roll; undoing the final score takes the recorded
+                  game back off the books so re-banking it counts once.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it
@@ -246,6 +249,13 @@ site. Same for shake to roll (needs HTTPS + real device motion).
 handler is silent on a real phone. Desktop test browsers grant it on touch-down too, so
 they cannot catch this; `test/splash.js` instead asserts a press alone does nothing.
 v2.12 shipped a silent splash this way.
+
+**Undo is for thumbs, not second goes.** Every undo button renders on `canUndo`, which
+is false once the current turn has rolled (or is rolling) and once a roll-off has
+thrown. Without that a player could roll, dislike it, undo the previous score, have it
+re-banked and start their turn afresh (v2.17). The game is recorded the moment the
+result is known, so `recordSnapRef` keeps the books as they were and `undoLast` puts
+them back; otherwise undoing the final score and banking it again counts the game twice.
 
 **iOS.** `purgeUndoStack()` defuses Apple's shake to undo dialogue. Do not remove it.
 

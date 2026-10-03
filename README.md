@@ -18,7 +18,7 @@ The upper section pays a 35 point bonus if you can scrape 63 across the number c
 
 ## Fahtzee forgives
 
-Banked the wrong category with a clumsy thumb? An undo button appears after every score, on every screen, and puts things back exactly as they were. One level deep, so use it before the next mistake.
+Banked the wrong category with a clumsy thumb? An undo button appears after every score, on every screen, and puts things back exactly as they were. One level deep, so use it before the next mistake. It is for thumbs, not second chances: it disappears the moment the next player throws their first roll, or the first roll of a roll off, so nobody can roll, dislike it, undo the previous score and start their turn again. Undo the final score of a game and the result comes off the stats too, so banking it again does not count the game twice.
 
 Phone died mid game? Safari ate the tab? The game saves itself after every single move. Come back and you will find a Resume card waiting: round, whose turn, everyone's names. Round eleven is never lost again.
 
@@ -61,6 +61,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.17** Closed a loophole, found and reported by a player of unimpeachable character: the undo button now vanishes once the next turn's first roll is thrown, so a bad turn can no longer be restarted by undoing the score before it. Undoing a game's final score also stops it being counted twice in the stats
 
 **v2.16** Rolling a Fahtzee now stops the game for a cut-scene: letterbox bars, five dice flying in slow motion, and the word itself, one letter at a time. The AI gets one too, and waits for it to finish, which is the most patience it has ever shown
 
