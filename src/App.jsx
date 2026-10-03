@@ -40,67 +40,38 @@ const THEMES = {
     blankBorder: "rgba(36,30,61,0.3)", blankBg: "rgba(36,30,61,0.05)", blankText: "rgba(36,30,61,0.35)",
     green: "#1E9E4F", greenBg: "rgba(30,158,79,0.14)",
   },
-  tabletop: {
-    bg: "linear-gradient(180deg, #EDA07E 0%, #E58A64 60%, #E8916B 100%)",
-    text: "#3A2E28",
-    sub70: "rgba(58,46,40,0.8)", sub60: "rgba(58,46,40,0.68)", sub55: "rgba(58,46,40,0.62)",
-    sub50: "rgba(58,46,40,0.56)", sub45: "rgba(58,46,40,0.5)", sub35: "rgba(58,46,40,0.42)",
-    sub30: "rgba(58,46,40,0.36)", sub25: "rgba(58,46,40,0.3)",
-    card: "rgba(255,252,246,0.94)", card2: "rgba(255,252,246,0.88)", rowBg: "rgba(58,46,40,0.03)",
-    border: "rgba(58,46,40,0.45)", border2: "rgba(58,46,40,0.2)", border3: "rgba(58,46,40,0.6)",
-    borderIdle: "rgba(58,46,40,0.35)", inputBorder: "rgba(58,46,40,0.4)",
-    chipBg: "rgba(58,46,40,0.08)",
-    tray: "rgba(255,252,246,0.7)", inputBg: "#FFF9F0", section: "#5D4037",
-    diceShadow: "0 5px 14px rgba(58,46,40,0.35)",
-    blankBorder: "rgba(58,46,40,0.4)", blankBg: "rgba(255,255,255,0.5)", blankText: "rgba(58,46,40,0.45)",
-    green: "#3D8B37", greenBg: "rgba(61,139,55,0.15)",
-  },
 };
 // Per-skin design tokens: not just colours but construction — borders, shadows, type
-const CH = "#3A2E28"; // tabletop charcoal
 THEMES.dark.font = "'Avenir Next', 'Segoe UI', system-ui, sans-serif";
 THEMES.light.font = THEMES.dark.font;
-THEMES.tabletop.font = "'Baloo 2', 'Avenir Next', 'Segoe UI', system-ui, sans-serif";
-// Card borders: hairlines in Classic, die-cut outlines in Tabletop
+// Card borders: hairlines in Classic
 THEMES.dark.cardBorder = `1px solid ${THEMES.dark.border}`;
 THEMES.light.cardBorder = `1px solid ${THEMES.light.border}`;
-THEMES.tabletop.cardBorder = `3px solid ${CH}`;
 // Card shadows: soft glow vs hard offset (the physical-piece look)
 THEMES.dark.cardShadow = "none";
 THEMES.light.cardShadow = "none";
-THEMES.tabletop.cardShadow = `0 5px 0 rgba(58,46,40,0.35)`;
 // Dice construction
 THEMES.dark.dieBorder = "none";
 THEMES.light.dieBorder = "none";
-THEMES.tabletop.dieBorder = `3px solid ${CH}`;
-THEMES.tabletop.diceShadow = `0 5px 0 rgba(58,46,40,0.55)`;
 // Buttons: pill gradients vs chunky uppercase slabs
 THEMES.dark.btnBorder = "none";
 THEMES.light.btnBorder = "none";
-THEMES.tabletop.btnBorder = `3px solid ${CH}`;
 THEMES.dark.btnShadow = "0 6px 20px rgba(247,37,133,0.4)";
 THEMES.light.btnShadow = "0 6px 20px rgba(247,37,133,0.4)";
-THEMES.tabletop.btnShadow = `0 5px 0 ${CH}`;
 THEMES.dark.btnCase = "none";
 THEMES.light.btnCase = "none";
-THEMES.tabletop.btnCase = "uppercase";
 // Wordmark: gradient carnival vs solid charcoal stamp
 THEMES.dark.wordmark = null; // null = gradient
 THEMES.light.wordmark = null;
-THEMES.tabletop.wordmark = CH;
 // Per-skin extras: section header text, big button, overlay wash, input placeholder
 THEMES.dark.sectionText = THEMES.dark.sub50;
 THEMES.light.sectionText = THEMES.light.sub50;
-THEMES.tabletop.sectionText = "rgba(251,239,228,0.95)";
 THEMES.dark.btn = "linear-gradient(90deg, #F72585, #B5179E)";
 THEMES.light.btn = "linear-gradient(90deg, #F72585, #B5179E)";
-THEMES.tabletop.btn = "linear-gradient(180deg, #C96650, #B4553F)";
 THEMES.dark.overlay = "rgba(10,8,20,0.88)";
 THEMES.light.overlay = "rgba(240,236,250,0.94)";
-THEMES.tabletop.overlay = "rgba(90,58,42,0.92)";
 THEMES.dark.placeholder = "rgba(245,243,250,0.35)";
 THEMES.light.placeholder = "rgba(36,30,61,0.4)";
-THEMES.tabletop.placeholder = "rgba(58,46,40,0.4)";
 // ---------- Neon: electric arcade ----------
 // Cyan is structural (rules, borders, the wordmark), magenta is reserved for
 // things you can press, so the eye always knows what is a control.
@@ -153,11 +124,9 @@ THEMES.neon.placeholder = "rgba(234,246,255,0.32)";
 // a chosen colour still wins, so the glow does Neon's work on the dice.
 THEMES.dark.dieFace = "linear-gradient(160deg, #FFFFFF, #E8E6F0)";
 THEMES.light.dieFace = THEMES.dark.dieFace;
-THEMES.tabletop.dieFace = THEMES.dark.dieFace;
 THEMES.neon.dieFace = "linear-gradient(160deg, #12122A, #05040F)";
 THEMES.dark.diePip = "#1B1730";
 THEMES.light.diePip = "#1B1730";
-THEMES.tabletop.diePip = "#1B1730";
 THEMES.neon.diePip = NEON_CYAN;
 
 // Player die colours are stored as a hex on the player and saved into resumed
@@ -166,7 +135,6 @@ THEMES.neon.diePip = NEON_CYAN;
 // the six at render time. null means "use the colour as chosen".
 THEMES.dark.dieColours = null;
 THEMES.light.dieColours = null;
-THEMES.tabletop.dieColours = null;
 THEMES.neon.dieColours = {
   "#FF5A5F": "#FF2E63", // Red
   "#4CC9F0": "#00E5FF", // Blue
@@ -181,7 +149,6 @@ THEMES.neon.dieColours = {
 // Player names pick up the same glow.
 THEMES.dark.colourGlow = false;
 THEMES.light.colourGlow = false;
-THEMES.tabletop.colourGlow = false;
 THEMES.neon.colourGlow = true;
 
 // Display face, for the wordmark only. Audiowide ships a single weight (400);
@@ -189,11 +156,9 @@ THEMES.neon.colourGlow = true;
 // system stack so the stats table's tabular figures stay legible at 13px.
 THEMES.dark.displayFont = THEMES.dark.font;
 THEMES.light.displayFont = THEMES.light.font;
-THEMES.tabletop.displayFont = THEMES.tabletop.font;
 THEMES.neon.displayFont = `'Audiowide', ${THEMES.dark.font}`;
 
-// Wordmark shadow: Tabletop stamps it, Neon lights it, the rest use a gradient
-THEMES.tabletop.wordmarkShadow = "0 4px 0 rgba(58,46,40,0.22)";
+// Wordmark shadow: Neon lights it, the rest use a gradient
 THEMES.neon.wordmarkShadow = "0 0 12px rgba(0,229,255,0.75), 0 0 34px rgba(0,229,255,0.4)";
 
 // ---------- Casino: green baize, gold hairlines, red felt ----------
@@ -320,18 +285,16 @@ THEMES.resistance.colourGlow = false; // a halo on a pale ground reads as smudge
 // the lobby has some structure instead of white cards on a warm ground.
 THEMES.dark.rosterBand = null;
 THEMES.light.rosterBand = null;
-THEMES.tabletop.rosterBand = null;
 THEMES.neon.rosterBand = null;
 THEMES.casino.rosterBand = null;
 THEMES.resistance.rosterBand = "rgba(63,69,76,0.94)";
 
-// Held dice. Gold is right where it is the house colour, so the five existing
-// skins keep it exactly; Resistance clamps in ink instead, because gold makes a
+// Held dice. Gold is right where it is the house colour, so the older skins
+// keep it exactly; Resistance clamps in ink instead, because gold makes a
 // third warm colour against rust and burnt orange.
 const HELD_GOLD = { ring: "#FFD23F", halo: "rgba(255,166,43,0.45)", face: "linear-gradient(160deg, #FFD23F, #FFA62B)" };
 THEMES.dark.held = HELD_GOLD;
 THEMES.light.held = HELD_GOLD;
-THEMES.tabletop.held = HELD_GOLD;
 THEMES.neon.held = HELD_GOLD;
 THEMES.casino.held = HELD_GOLD;
 THEMES.resistance.held = {
@@ -446,15 +409,11 @@ THEMES.sweets = {
   },
 };
 
-// The older six: the new construction tokens, set explicitly so nothing is undefined
-for (const s of ["dark", "light", "tabletop", "neon", "casino", "resistance"]) {
+// The older five: the newer construction tokens, set explicitly so nothing is undefined.
+// board: null keeps them on the Classic playing screen
+for (const s of ["dark", "light", "neon", "casino", "resistance"]) {
   Object.assign(THEMES[s], { link: "#4CC9F0", pick: { ink: "#4CC9F0", border: "#4CC9F0", bg: "rgba(76,201,240,0.13)" }, btnFont: null, cardRadius: 20, wordmarkFill: null, wordmarkStroke: null, wordmarkBadge: null, dieGloss: null, dieInset: null, board: null });
 }
-THEMES.tabletop.board = {
-  ink: CH, inkRgb: "58,46,40", paper: "#FBF3E6", tile: "#FFFFFF", plaque: "#5D4037", plaqueText: "#FBF3E6",
-  accent: "#F0B93A", upperTab: "#F0B93A", lowerTab: "#7CC15C", good: "#3D8B37",
-  radius: 24, shadow: "0 7px 0 rgba(58,46,40,0.4)", caption: null, font: null,
-};
 
 // A comic starburst: sixteen spikes round an ellipse, as a CSS clip-path
 const BURST = `polygon(${Array.from({ length: 32 }, (_, k) => {
@@ -462,7 +421,9 @@ const BURST = `polygon(${Array.from({ length: 32 }, (_, k) => {
   return `${(50 + Math.cos(a) * r * 100).toFixed(1)}% ${(50 + Math.sin(a) * r * 100).toFixed(1)}%`;
 }).join(", ")})`;
 
-const SKIN_ORDER = ["dark", "light", "tabletop", "comic", "sweets", "neon", "casino", "resistance"];
+const SKIN_ORDER = ["dark", "light", "comic", "sweets", "neon", "casino", "resistance"];
+// Tabletop was retired in v2.19; anyone who had it wakes up in Comic, which inherited its board
+const RETIRED_SKINS = { tabletop: "comic" };
 let T = THEMES.dark;
 
 
@@ -516,15 +477,6 @@ const MoonIcon = ({ size = 20 }) => (
     />
     <circle cx="17" cy="6" r="1.1" fill="#7C5CBF" />
     <circle cx="20.5" cy="9.5" r="0.7" fill="#7C5CBF" />
-  </svg>
-);
-const BoardIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="#FBEFE4" stroke="#3A2E28" strokeWidth="1.6" />
-    <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.5" fill="#FFD23F" />
-    <rect x="13" y="3.5" width="7.5" height="7.5" rx="2.5" fill="#4CC9F0" />
-    <rect x="3.5" y="13" width="7.5" height="7.5" rx="2.5" fill="#FF5A5F" />
-    <rect x="13" y="13" width="7.5" height="7.5" rx="2.5" fill="#80ED99" />
   </svg>
 );
 const BotIcon = ({ size = 20 }) => (
@@ -762,7 +714,8 @@ export default function Fahtzee() {
   const [skin, setSkin] = useState(() => {
     try {
       const s = window.localStorage.getItem("fahtzee-skin");
-      return SKIN_ORDER.includes(s) ? s : "dark";
+      const k = RETIRED_SKINS[s] || s;
+      return SKIN_ORDER.includes(k) ? k : "dark";
     } catch { return "dark"; }
   });
   T = THEMES[skin];
@@ -1370,7 +1323,7 @@ export default function Fahtzee() {
       </div>
       <button
         onClick={cycleSkin}
-        aria-label="Change skin: Classic dark, Classic light, Tabletop, Neon, Casino, or The Resistance"
+        aria-label="Change skin: Classic dark, Classic light, Comic, Sweet Shop, Neon, Casino, or The Resistance"
         style={{
           position: "fixed",
           top: 14,
@@ -1388,7 +1341,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>💥</span> : skin === "comic" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>🍬</span> : skin === "sweets" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>✨</span> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>💥</span> : skin === "comic" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>🍬</span> : skin === "sweets" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>✨</span> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
@@ -2365,7 +2318,8 @@ export default function Fahtzee() {
     );
   };
 
-  // ---------- Tabletop skin: its own playing-screen layout ----------
+  // ---------- The board playing screen: scoreboard plaque, dice on a board, tile scorecard ----------
+  // Used by any skin with a board token (Comic, Sweet Shop); first built for Tabletop, since retired
   if (T.board) {
     const B = T.board;
     const CHT = B.ink, CREAMT = B.paper, BROWNT = B.plaque;

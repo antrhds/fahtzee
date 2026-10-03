@@ -151,13 +151,13 @@ const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("fah
   await ctx.close();
 
   // 4. Every skin: it plays, with no errors or overflow
-  for (const skin of ["light", "tabletop", "neon", "casino", "resistance"]) {
+  for (const skin of ["light", "comic", "sweets", "neon", "casino", "resistance"]) {
     ({ ctx, page, errors } = await open(browser, { skin }));
     await page.locator("button", { hasText: /^Roll/ }).first().click();
     await page.waitForTimeout(2600);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     check(`${skin}: plays with no overflow or errors`, (await scene(page)) === 1 && !overflow && errors.length === 0, errors.join(" | "));
-    if (shots && skin === "tabletop") await page.screenshot({ path: path.join(shots, "scene-tabletop.png") });
+    if (shots && skin === "comic") await page.screenshot({ path: path.join(shots, "scene-comic.png") });
     await ctx.close();
   }
 

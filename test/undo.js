@@ -13,7 +13,7 @@ const path = require("path");
 const PAGE = "file://" + path.join(__dirname, "..", "index.html");
 const findChromium = () =>
   [process.env.CHROMIUM_PATH, "/opt/pw-browsers/chromium"].find((p) => p && fs.existsSync(p));
-const SKINS = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
+const SKINS = ["dark", "light", "comic", "sweets", "neon", "casino", "resistance"];
 
 let failures = 0;
 const check = (label, ok, detail = "") => {
@@ -77,7 +77,7 @@ const books = (page) => page.evaluate(() => ({
   const exe = findChromium();
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
 
-  // 1. The cheat, in every skin (Tabletop has its own playing screen)
+  // 1. The cheat, in every skin (Comic and Sweet Shop use the board playing screen)
   for (const skin of SKINS) {
     console.log(`\n[1] ${skin}: the undo goes with the next turn's first roll`);
     const { ctx, page, errors } = await open(browser, fresh, skin);
