@@ -20,7 +20,7 @@ manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js (Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js (Playwright), ai.js (Node + Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
@@ -28,7 +28,9 @@ src/
   constants.js VERSION string, COLOUR_CHOICES, PIP_LAYOUTS
   logic.js     counts, sum, SCORERS, UPPER, LOWER, UPPER_KEYS, totalsFor
   audio.js     Web Audio synth effects, sample loader, speech (say), haptics
-  ai.js        botChooseHolds / botChooseCategory / botShouldStop, levels 0/1/2, sleep
+  ai.js        botChooseHolds / botChooseCategory / botShouldStop, levels 0/1/2, sleep.
+               Easy is rules of thumb; Normal and Ruthless are a look-ahead over every keep
+               (MINDS sets how far ahead and how much they value the bonus). Pass rollsLeft
   lines.js     The announcer's script: win/loss lines, AI table talk, Stats panel lines
   storage.js   localStorage: lifetime tally, streaks, head to head, recent history, resume
   splash.js    The opening splash, drawn live on a canvas; every frame is a pure f(t)
@@ -125,6 +127,10 @@ test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not,
 test/undo.js      The undo button goes with the next turn's first roll in all six skins, and
                   with the first roll-off roll; undoing the final score takes the recorded
                   game back off the books so re-banking it counts once.
+test/ai.js        Plays N (default 300) seeded solo games per AI level straight from src/ai.js:
+                  each level's average must sit in its band (Easy 145-180, Normal 215-240,
+                  Ruthless 235+). Specific decisions, then each level plays a real turn in the
+                  built page. Retune the AI against this, not by feel.
 ```
 
 `test/skins.js` uses the preinstalled Chromium at `/opt/pw-browsers/chromium` when it

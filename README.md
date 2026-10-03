@@ -10,7 +10,7 @@ No downloads. No accounts. No ads. One phone, up to four players, and thirteen r
 
 ## How it works
 
-Enter two to four names and tap your die to pick its colour: red, blue, orange, yellow, green or purple. Your dice are yours now. When your turn comes, the dice on the table roll in your colour, first come first served, and no two players can clash. Short a player? Draft in the AI and pick its mood: Easy holds a pair when it trips over one and sometimes banks the wrong thing entirely. Normal plays a sensible game. Ruthless hunts Fahtzees, hoards double pairs for full houses, and will not waste Chance on a bad hand. Choose according to who needs beating. In solo play the AI goes first, so you always know exactly what you are chasing.
+Enter two to four names and tap your die to pick its colour: red, blue, orange, yellow, green or purple. Your dice are yours now. When your turn comes, the dice on the table roll in your colour, first come first served, and no two players can clash. Short a player? Draft in the AI and pick its mood: Easy holds a pair when it trips over one, keeps a good hand when it is handed one, and more often than not banks the second best thing, because it is not concentrating. Normal looks one roll ahead: before every roll it works out what each possible keep is worth over every way the rest could land, though it never gives the upper bonus a thought. Ruthless does the same sums to the end of the turn, plays for the bonus from the first roll, and averages over 240. It will not waste Chance on a bad hand, or Sixes on two sixes. Choose according to who needs beating. In solo play the AI goes first, so you always know exactly what you are chasing.
 
 Pass the phone around. Each turn you get three rolls of five dice, holding the ones you like between rolls, then bank your score in one of thirteen categories. New to it? There is a How to play guide right there in the lobby with the full rules, so nobody has to explain the Full House situation mid game ever again.
 
@@ -61,6 +61,8 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 There is only one: no arguing with the dice. They cannot hear you and they do not care.
 
 ## Version history
+
+**v2.18** The AI went back to school. Normal and Ruthless now work out the odds of every possible keep before each roll, and Ruthless plans for the upper bonus, which it previously managed about one game in ten. Simulated averages: Easy 143 to 163, Normal 209 to 228, Ruthless 211 to 243. It also understands a second Fahtzee, rolls on from four of a kind when a Fahtzee is still possible, and Easy no longer rerolls a large straight to see what happens
 
 **v2.17** Closed a loophole, found and reported by a player of unimpeachable character: the undo button now vanishes once the next turn's first roll is thrown, so a bad turn can no longer be restarted by undoing the score before it. Undoing a game's final score also stops it being counted twice in the stats
 

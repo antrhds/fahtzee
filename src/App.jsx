@@ -947,8 +947,10 @@ export default function Fahtzee() {
             if (!live()) return;
             const { dice: d, players: ps, current: cur } = gameRef.current;
             const scores = ps[cur].scores;
-            if (r < 2 && !botShouldStop(d, scores, level)) {
-              setHeld(botChooseHolds(d, scores, level));
+            if (r < 2 && !botShouldStop(d, scores, level, 2 - r)) {
+              const holds = botChooseHolds(d, scores, level, 2 - r);
+              if (holds.every(Boolean)) break; // keeping all five: rolling again would only rattle
+              setHeld(holds);
               await sleep(800);
               if (!live()) return;
             } else {
