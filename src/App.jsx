@@ -399,7 +399,8 @@ THEMES.sweets = {
   overlay: "rgba(255,244,249,0.97)",
   placeholder: "rgba(91,52,35,0.4)",
   dieFace: "linear-gradient(160deg, #FFFFFF, #FBEFE6)", diePip: CHOC,
-  dieGloss: "radial-gradient(circle at 27% 20%, rgba(255,255,255,0.95) 0 8%, rgba(255,255,255,0) 24%), linear-gradient(165deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 45%, rgba(0,0,0,0.12))",
+  // A soft sheen across the top, never a spot: a round highlight read as an extra pip (v2.21)
+  dieGloss: "radial-gradient(ellipse 90% 46% at 50% 0%, rgba(255,255,255,0.5), rgba(255,255,255,0) 100%), linear-gradient(180deg, rgba(255,255,255,0) 55%, rgba(0,0,0,0.12))",
   dieInset: "inset 0 -6px 10px rgba(0,0,0,0.16), inset 0 3px 5px rgba(255,255,255,0.55)",
   dieColours: {
     "#FF5A5F": "#FF4B72", "#4CC9F0": "#33A8F5", "#FFA62B": "#FF9A3D",
@@ -423,6 +424,9 @@ THEMES.sweets = {
 for (const s of ["dark", "light", "neon", "casino", "resistance"]) {
   Object.assign(THEMES[s], { inkPage: null, link: "#4CC9F0", pick: { ink: "#4CC9F0", border: "#4CC9F0", bg: "rgba(76,201,240,0.13)" }, btnFont: null, cardRadius: 20, wordmarkFill: null, wordmarkStroke: null, wordmarkBadge: null, dieGloss: null, dieInset: null, board: null });
 }
+// Casino's link and AI picker in gold, not a blue that fought the baize
+THEMES.casino.link = CASINO_GOLD;
+THEMES.casino.pick = { ink: CASINO_GOLD, border: CASINO_GOLD, bg: "rgba(201,168,90,0.14)" };
 
 // A comic starburst: sixteen spikes round an ellipse, as a CSS clip-path
 const BURST = `polygon(${Array.from({ length: 32 }, (_, k) => {

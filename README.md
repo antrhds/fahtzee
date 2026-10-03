@@ -62,6 +62,8 @@ There is only one: no arguing with the dice. They cannot hear you and they do no
 
 ## Version history
 
+**v2.21** Sweet Shop's dice lost the round shine in the corner, which was sitting where a pip would go and turning ones into twos; the sugar now spreads across the top instead. Casino's version link and AI picker are gold rather than a blue that argued with the baize
+
 **v2.20** Comic inks its pass-the-phone and final score pages properly, in black outlines and comic lettering, and the playing screens in Comic and Sweet Shop now fit on a phone without scrolling: the scoreboard carries the round, the score rows sit closer together, and the total at the bottom went, having only repeated the one at the top. Roll-off names are readable in both again
 
 **v2.19** Tabletop has been retired, with thanks for its service, and replaced by two: Comic, all black ink and POW, and Sweet Shop, which is mostly sugar. Anyone who was on Tabletop wakes up in Comic. Its board survives in both
