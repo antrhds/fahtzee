@@ -111,7 +111,8 @@ test/skins.js     Every skin renders the lobby and a turn at 360px with no page 
                   stored `tabletop` opens in Comic; Comic and Sweet Shop fit a turn in
                   360 x 727 with no scrolling. Playwright.
 test/dice-colours.js  Per-skin die colours are a render-time remap only: the
-                  stored hex must survive every skin. Playwright.
+                  stored hex must survive every skin; and no skin's die finish adds
+                  a spot that passes for a pip. Playwright.
 test/splash.js    The splash waits on its card, the tap starts animation and sound
                   without reaching the lobby, a second tap skips, it leaves by
                   itself, it plays once per session, honours reduced motion.
@@ -281,9 +282,10 @@ them back; otherwise undoing the final score and banking it again counts the gam
 
 **iOS.** `purgeUndoStack()` defuses Apple's shake to undo dialogue. Do not remove it.
 
-**Known rough edge.** The version link in the lobby header is the `link` token (v2.19),
-but the older five all still use the same blue, which sits oddly on Casino's baize. Fixing
-it is now just a token value per skin.
+**Nothing on a die may look like a pip.** `dieGloss` sits over the pips' grid, so a round
+highlight reads as an extra pip (Sweet Shop shipped one in v2.19; v2.21 swapped it for a
+sheen across the top). `test/dice-colours.js` counts the white spots on a die showing one
+in every skin and expects exactly one.
 
 **Deployment.** GitHub Pages serves the last *successful* build. Failed or queued builds
 are silent — the old version just keeps being served. If Tony says an update has not
