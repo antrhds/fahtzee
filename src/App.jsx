@@ -3,7 +3,7 @@ import { VERSION, COLOUR_CHOICES, PIP_LAYOUTS } from "./constants.js";
 import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
-import { loadHistory, loadTally, recordGame, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
+import { loadHistory, loadTally, recordGame, snapshotRecords, restoreRecords, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
 import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone, FACE_WORDS, SCENE_SUB, SCENE_SUB_AI } from "./lines.js";
 import { MILESTONE_EVENT } from "./Milestone.jsx";
 import { SCENE_EVENT, SCENE_DONE, prefersLessMotion } from "./FahtzeeScene.jsx";
@@ -661,6 +661,7 @@ export default function Fahtzee() {
   const recordedRef = useRef(false);
   const announcedRef = useRef(false);
   const [undoSnap, setUndoSnap] = useState(null);
+  const recordSnapRef = useRef(null); // the books as they were before this game was recorded
   const [savedGame, setSavedGame] = useState(() => loadCurrentGame());
   const [aiLevel, setAiLevel] = useState(1);
   const gameIdRef = useRef(0);
@@ -699,6 +700,11 @@ export default function Fahtzee() {
   gameRef.current = { dice, players, current, rollsLeft, phase, rolling };
 
   const hasRolled = rollsLeft < 3;
+  // Undo is for a fat thumb on the last score, not a second go: it goes the moment
+  // the next turn's first roll (or the roll-off's) is thrown, so nobody can roll,
+  // dislike it, undo the previous score and start their turn again
+  const canUndo = !!undoSnap && !hasRolled && !rolling && !rolloffRolling &&
+    !(rolloff && Object.keys(rolloff.rollsTaken).length > 0);
   const player = players[current];
 
   // The Fahtzee cut-scene (src/FahtzeeScene.jsx). While it plays, sceneOnRef
@@ -941,8 +947,10 @@ export default function Fahtzee() {
             if (!live()) return;
             const { dice: d, players: ps, current: cur } = gameRef.current;
             const scores = ps[cur].scores;
-            if (r < 2 && !botShouldStop(d, scores, level)) {
-              setHeld(botChooseHolds(d, scores, level));
+            if (r < 2 && !botShouldStop(d, scores, level, 2 - r)) {
+              const holds = botChooseHolds(d, scores, level, 2 - r);
+              if (holds.every(Boolean)) break; // keeping all five: rolling again would only rattle
+              setHeld(holds);
               await sleep(800);
               if (!live()) return;
             } else {
@@ -961,7 +969,7 @@ export default function Fahtzee() {
   }, [phase, current, players]);
 
   const undoLast = () => {
-    if (!undoSnap) return;
+    if (!canUndo) return;
     gameIdRef.current++;           // cancels any in-flight AI turn and roll animation
     botBusyRef.current = false;
     setRolling(false);
@@ -973,6 +981,11 @@ export default function Fahtzee() {
     setRollsLeft(undoSnap.rollsLeft);
     setRolloff(null);
     setRolloffDice(null);
+    if (recordedRef.current && restoreRecords(recordSnapRef.current)) {
+      setHistory(loadHistory());
+      setTally(loadTally());
+    }
+    recordSnapRef.current = null;
     recordedRef.current = false;
     announcedRef.current = false;
     setUndoSnap(null);
@@ -1145,6 +1158,7 @@ export default function Fahtzee() {
     }
     if (winnerIdx === null) return; // tie not yet settled by the roll-off
     recordedRef.current = true;
+    recordSnapRef.current = snapshotRecords();
     play("win");
     haptic([20, 40, 20, 40, 120]);
     const winner = players[winnerIdx];
@@ -1921,7 +1935,7 @@ export default function Fahtzee() {
             </div>
           ))}
         </div>
-        {undoSnap && (
+        {canUndo && (
           <button
             onClick={undoLast}
             style={{
@@ -2111,7 +2125,7 @@ export default function Fahtzee() {
           })}
         </div>
         {bigButton("Play Again", newGame)}
-        {undoSnap && (
+        {canUndo && (
           <button
             onClick={undoLast}
             style={{
@@ -2463,7 +2477,7 @@ export default function Fahtzee() {
           </div>
         </div>
 
-        {undoSnap && (
+        {canUndo && (
           <button
             onClick={undoLast}
             style={{
@@ -2668,7 +2682,7 @@ export default function Fahtzee() {
           </div>
         ))}
       </div>
-      {undoSnap && (
+      {canUndo && (
         <button
           onClick={undoLast}
           style={{

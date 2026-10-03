@@ -93,6 +93,18 @@ export const recordGame = (game) =>
     return true;
   }, false);
 
+// Undo after the final score must take the recorded game back off the books, or
+// undoing and re-banking counts the same game twice. Raw strings, restored verbatim.
+export const snapshotRecords = () =>
+  safe(() => ({ history: window.localStorage.getItem(STATS_KEY), tally: window.localStorage.getItem(TALLY_KEY) }), null);
+export const restoreRecords = (snap) =>
+  safe(() => {
+    if (!snap) return false;
+    [[STATS_KEY, snap.history], [TALLY_KEY, snap.tally]].forEach(([k, v]) =>
+      v === null ? window.localStorage.removeItem(k) : window.localStorage.setItem(k, v));
+    return true;
+  }, false);
+
 const GAME_KEY = "fahtzee-current-game";
 export const saveCurrentGame = (state) =>
   safe(() => {
