@@ -340,7 +340,129 @@ THEMES.resistance.held = {
   face: "linear-gradient(160deg, #3F454C, #2A2F35)",
 }; // a halo on a pale ground reads as smudge
 
-const SKIN_ORDER = ["dark", "light", "tabletop", "neon", "casino", "resistance"];
+// ---------- Comic: a pop-art comic book ----------
+// Black ink holds everything together; red is for things you press, yellow is
+// the page, and every panel casts a hard offset shadow like a printed frame.
+const INK = "#111111";
+const COMIC_RED = "#E8222E";
+const COMIC_YELLOW = "#FFE000";
+THEMES.comic = {
+  bg: `radial-gradient(rgba(232,34,46,0.22) 23%, transparent 25%) 0 0/11px 11px,
+       repeating-conic-gradient(from 0deg at 50% -10%, #FFE000 0deg 7deg, #FFC700 7deg 14deg)`,
+  text: INK,
+  sub70: "rgba(17,17,17,0.82)", sub60: "rgba(17,17,17,0.72)", sub55: "rgba(17,17,17,0.66)",
+  sub50: "rgba(17,17,17,0.6)", sub45: "rgba(17,17,17,0.55)", sub35: "rgba(17,17,17,0.45)",
+  sub30: "rgba(17,17,17,0.38)", sub25: "rgba(17,17,17,0.32)",
+  card: "#FFFFFF", card2: "#FFFFFF", rowBg: "rgba(17,17,17,0.04)",
+  border: INK, border2: "rgba(17,17,17,0.25)", border3: INK,
+  borderIdle: "rgba(17,17,17,0.45)", inputBorder: INK,
+  chipBg: "rgba(255,224,0,0.5)",
+  tray: "rgba(255,255,255,0.6)", inputBg: "#FFFFFF", section: INK,
+  diceShadow: `4px 4px 0 ${INK}`,
+  blankBorder: INK, blankBg: "#FFFFFF", blankText: INK,
+  green: "#14883A", greenBg: "rgba(31,163,74,0.16)",
+  font: "'Comic Neue', 'Avenir Next', 'Segoe UI', system-ui, sans-serif",
+  displayFont: "'Bangers', 'Impact', system-ui, sans-serif",
+  btnFont: "'Bangers', 'Impact', system-ui, sans-serif",
+  cardBorder: `3px solid ${INK}`, cardShadow: `6px 6px 0 ${INK}`, cardRadius: 6,
+  dieBorder: `3px solid ${INK}`,
+  btnBorder: `3px solid ${INK}`, btnShadow: `4px 4px 0 ${INK}`, btnCase: "uppercase", btn: COMIC_RED,
+  wordmark: COMIC_YELLOW,
+  wordmarkShadow: `3px 3px 0 ${INK}, -2px -2px 0 ${INK}, 2px -2px 0 ${INK}, -2px 2px 0 ${INK}, 6px 6px 0 ${COMIC_RED}`,
+  wordmarkFill: null, wordmarkStroke: null,
+  wordmarkBadge: { background: COMIC_RED, border: INK },
+  sectionText: COMIC_YELLOW,
+  overlay: "rgba(255,251,236,0.97)",
+  placeholder: "rgba(17,17,17,0.4)",
+  dieFace: "#FFFFFF", diePip: INK,
+  dieGloss: "radial-gradient(rgba(0,0,0,0.16) 22%, transparent 25%) 0 0/7px 7px",
+  dieInset: null,
+  dieColours: {
+    "#FF5A5F": "#E8222E", "#4CC9F0": "#1F6FE0", "#FFA62B": "#FF8A00",
+    "#FFD23F": "#FFE000", "#80ED99": "#22B04B", "#B388FF": "#8B3FD9",
+  },
+  colourGlow: false,
+  rosterBand: null,
+  link: "#1F6FE0",
+  pick: { ink: INK, border: INK, bg: COMIC_YELLOW },
+  held: { ring: INK, halo: "rgba(255,224,0,0.95)", face: `linear-gradient(160deg, ${COMIC_YELLOW}, #FFC700)` },
+  board: {
+    ink: INK, inkRgb: "17,17,17", paper: "#FFFFFF", tile: "#FFFFFF", plaque: INK, plaqueText: "#FFFFFF",
+    accent: COMIC_YELLOW, upperTab: COMIC_YELLOW, lowerTab: "#22C7F0", good: "#14883A",
+    radius: 6, shadow: `6px 6px 0 ${INK}`, caption: COMIC_YELLOW, font: "'Bangers', 'Impact', system-ui, sans-serif",
+  },
+};
+
+// ---------- Sweet Shop: the pick 'n' mix counter ----------
+// Paper bag stripes, chocolate for ink, and dice like boiled sweets: your colour,
+// with a sugar shine and a little depth, so they look sucked rather than printed.
+const CHOC = "#5B3423";
+const BUBBLEGUM = "#FF5FA2";
+THEMES.sweets = {
+  bg: "repeating-linear-gradient(135deg, #FFD6E7 0 26px, #FFF6F9 26px 52px)",
+  text: CHOC,
+  sub70: "rgba(91,52,35,0.82)", sub60: "rgba(91,52,35,0.72)", sub55: "rgba(91,52,35,0.66)",
+  sub50: "rgba(91,52,35,0.6)", sub45: "rgba(91,52,35,0.55)", sub35: "rgba(91,52,35,0.45)",
+  sub30: "rgba(91,52,35,0.38)", sub25: "rgba(91,52,35,0.32)",
+  card: "#FFFAF3", card2: "#FFF5EA", rowBg: "rgba(91,52,35,0.04)",
+  border: "rgba(91,52,35,0.35)", border2: "rgba(91,52,35,0.18)", border3: CHOC,
+  borderIdle: "rgba(91,52,35,0.3)", inputBorder: "#F7A8C8",
+  chipBg: "rgba(255,95,162,0.14)",
+  tray: "rgba(255,255,255,0.6)", inputBg: "#FFFFFF", section: CHOC,
+  diceShadow: "0 5px 0 rgba(91,52,35,0.28)",
+  blankBorder: "#F7A8C8", blankBg: "rgba(255,255,255,0.7)", blankText: "#F28AB6",
+  green: "#2E9E6E", greenBg: "rgba(46,158,110,0.15)",
+  font: "'Fredoka', 'Avenir Next', 'Segoe UI', system-ui, sans-serif",
+  displayFont: "'Titan One', 'Fredoka', 'Avenir Next', system-ui, sans-serif",
+  btnFont: null,
+  cardBorder: `3px solid ${BUBBLEGUM}`, cardShadow: "0 7px 0 #F4A3C6", cardRadius: 28,
+  dieBorder: "none",
+  btnBorder: `3px solid ${CHOC}`, btnShadow: `0 5px 0 ${CHOC}`, btnCase: "none",
+  btn: `linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, #FF7DB4, #E83A86)`,
+  wordmark: null,
+  wordmarkShadow: null,
+  wordmarkFill: `repeating-linear-gradient(-55deg, ${BUBBLEGUM} 0 8px, #FFFFFF 8px 15px)`,
+  wordmarkStroke: `2.5px ${CHOC}`,
+  wordmarkBadge: null,
+  sectionText: "#FFF3E6",
+  overlay: "rgba(255,244,249,0.97)",
+  placeholder: "rgba(91,52,35,0.4)",
+  dieFace: "linear-gradient(160deg, #FFFFFF, #FBEFE6)", diePip: CHOC,
+  dieGloss: "radial-gradient(circle at 27% 20%, rgba(255,255,255,0.95) 0 8%, rgba(255,255,255,0) 24%), linear-gradient(165deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 45%, rgba(0,0,0,0.12))",
+  dieInset: "inset 0 -6px 10px rgba(0,0,0,0.16), inset 0 3px 5px rgba(255,255,255,0.55)",
+  dieColours: {
+    "#FF5A5F": "#FF4B72", "#4CC9F0": "#33A8F5", "#FFA62B": "#FF9A3D",
+    "#FFD23F": "#FFDC4F", "#80ED99": "#7FD94B", "#B388FF": "#A86CFF",
+  },
+  colourGlow: false,
+  rosterBand: null,
+  link: "#E83A86",
+  pick: { ink: "#D62F78", border: "#E83A86", bg: "rgba(255,95,162,0.14)" },
+  held: { ring: CHOC, halo: "rgba(255,95,162,0.45)", face: "linear-gradient(160deg, #FFE066, #FFB84D)" },
+  board: {
+    ink: CHOC, inkRgb: "91,52,35", paper: "#FFFAF3", tile: "#FFFFFF", plaque: CHOC, plaqueText: "#FFF3E6",
+    accent: "#FFDC4F", upperTab: "#FFA9CF", lowerTab: "#9BE7CF", good: "#2E9E6E",
+    radius: 26, shadow: "0 7px 0 #F4A3C6", caption: null, font: null,
+  },
+};
+
+// The older six: the new construction tokens, set explicitly so nothing is undefined
+for (const s of ["dark", "light", "tabletop", "neon", "casino", "resistance"]) {
+  Object.assign(THEMES[s], { link: "#4CC9F0", pick: { ink: "#4CC9F0", border: "#4CC9F0", bg: "rgba(76,201,240,0.13)" }, btnFont: null, cardRadius: 20, wordmarkFill: null, wordmarkStroke: null, wordmarkBadge: null, dieGloss: null, dieInset: null, board: null });
+}
+THEMES.tabletop.board = {
+  ink: CH, inkRgb: "58,46,40", paper: "#FBF3E6", tile: "#FFFFFF", plaque: "#5D4037", plaqueText: "#FBF3E6",
+  accent: "#F0B93A", upperTab: "#F0B93A", lowerTab: "#7CC15C", good: "#3D8B37",
+  radius: 24, shadow: "0 7px 0 rgba(58,46,40,0.4)", caption: null, font: null,
+};
+
+// A comic starburst: sixteen spikes round an ellipse, as a CSS clip-path
+const BURST = `polygon(${Array.from({ length: 32 }, (_, k) => {
+  const a = (k / 32) * Math.PI * 2, r = k % 2 ? 0.34 : 0.5;
+  return `${(50 + Math.cos(a) * r * 100).toFixed(1)}% ${(50 + Math.sin(a) * r * 100).toFixed(1)}%`;
+}).join(", ")})`;
+
+const SKIN_ORDER = ["dark", "light", "tabletop", "comic", "sweets", "neon", "casino", "resistance"];
 let T = THEMES.dark;
 
 
@@ -542,13 +664,13 @@ function Die({ value, held, onClick, rolling, disabled, blank, colour, size = 58
         borderRadius: size * 0.28,
         border: held && T.dieBorder !== "none" ? `3px solid ${T.held.ring}` : T.dieBorder,
         background: colour
-          ? skinColour(colour)
+          ? (T.dieGloss ? `${T.dieGloss}, ${skinColour(colour)}` : skinColour(colour))
           : held
           ? T.held.face
           : T.dieFace,
-        boxShadow: held
+        boxShadow: (held
           ? `0 0 0 4px ${T.held.ring}, 0 6px 16px ${T.held.halo}`
-          : colourGlowFor(skinColour(colour)) || T.diceShadow,
+          : colourGlowFor(skinColour(colour)) || T.diceShadow) + (T.dieInset ? `, ${T.dieInset}` : ""),
         cursor: disabled ? "default" : "pointer",
         padding: 8,
         transform: held ? "scale(0.92)" : "scale(1)",
@@ -1217,6 +1339,12 @@ export default function Fahtzee() {
         button:focus-visible, input:focus-visible { outline: 3px solid #FFD23F; }
         input::placeholder { color: ${T.placeholder}; }
       `}</style>
+      <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", ...(T.wordmarkBadge ? { height: 138, marginTop: -8, marginBottom: 4 } : null) }}>
+      {T.wordmarkBadge && (
+        <div aria-hidden="true" style={{ position: "absolute", width: 310, height: 128, background: T.wordmarkBadge.border, clipPath: BURST, transform: "rotate(-4deg)" }}>
+          <div style={{ position: "absolute", inset: 6, background: T.wordmarkBadge.background, clipPath: BURST }} />
+        </div>
+      )}
       <h1
         style={{
           fontSize: 42,
@@ -1225,7 +1353,10 @@ export default function Fahtzee() {
           margin: "0 0 2px",
           transform: skin === "neon" ? "none" : "rotate(-2deg)",
           fontFamily: T.displayFont,
-          ...(T.wordmark
+          ...(T.wordmarkBadge ? { position: "relative", zIndex: 1, fontSize: 50, letterSpacing: "0.04em", margin: "6px 0 10px" } : null),
+          ...(T.wordmarkFill
+            ? { background: T.wordmarkFill, WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", WebkitTextStroke: T.wordmarkStroke, fontSize: 50, fontWeight: 400, letterSpacing: "0.01em", filter: "drop-shadow(0 4px 0 rgba(91,52,35,0.35))" }
+            : T.wordmark
             ? { color: T.wordmark, textShadow: T.wordmarkShadow }
             : {
                 background: "linear-gradient(90deg, #FFD23F, #F72585, #4CC9F0)",
@@ -1236,6 +1367,7 @@ export default function Fahtzee() {
       >
         FAHTZEE
       </h1>
+      </div>
       <button
         onClick={cycleSkin}
         aria-label="Change skin: Classic dark, Classic light, Tabletop, Neon, Casino, or The Resistance"
@@ -1256,7 +1388,7 @@ export default function Fahtzee() {
           justifyContent: "center",
         }}
       >
-        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>✨</span> : <MoonIcon size={22} />}
+        {skin === "dark" ? <SunIcon size={22} /> : skin === "light" ? <BoardIcon size={22} /> : skin === "tabletop" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>💥</span> : skin === "comic" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>🍬</span> : skin === "sweets" ? <BoltIcon size={22} /> : skin === "neon" ? <ChipIcon size={22} /> : skin === "casino" ? <span role="img" aria-hidden="true" style={{ fontSize: 21, lineHeight: 1 }}>✨</span> : <MoonIcon size={22} />}
       </button>
       <button
         onClick={() => setSoundOn((s) => !s)}
@@ -1338,8 +1470,8 @@ export default function Fahtzee() {
       onClick={onClick}
       disabled={disabled}
       style={{
-        fontFamily: "inherit",
-        fontSize: 18,
+        fontFamily: T.btnFont || "inherit",
+        fontSize: T.btnFont ? 22 : 18,
         fontWeight: 800,
         letterSpacing: T.btnCase === "uppercase" ? "0.08em" : "0.02em",
         textTransform: T.btnCase,
@@ -1370,7 +1502,7 @@ export default function Fahtzee() {
               fontFamily: "inherit",
               fontSize: 14,
               fontWeight: 700,
-              color: "#4CC9F0",
+              color: T.link,
               background: "none",
               border: "none",
               padding: 0,
@@ -1444,7 +1576,7 @@ export default function Fahtzee() {
             background: T.card,
             border: T.cardBorder,
             boxShadow: T.cardShadow,
-            borderRadius: 20,
+            borderRadius: T.cardRadius,
             padding: "22px 20px",
             display: "flex",
             flexDirection: "column",
@@ -1471,7 +1603,7 @@ export default function Fahtzee() {
                   width: 36,
                   height: 36,
                   borderRadius: 9,
-                  background: skinColour(COLOUR_CHOICES[colourPicks[i]].hex),
+                  background: T.dieGloss ? `${T.dieGloss}, ${skinColour(COLOUR_CHOICES[colourPicks[i]].hex)}` : skinColour(COLOUR_CHOICES[colourPicks[i]].hex),
                   flexShrink: 0,
                   border: `2px solid ${T.border3}`,
                   boxShadow: `0 0 10px ${skinColour(COLOUR_CHOICES[colourPicks[i]].hex)}66`,
@@ -1517,8 +1649,8 @@ export default function Fahtzee() {
               gap: 10,
               padding: "10px 14px",
               borderRadius: 12,
-              border: `1px solid ${addBot ? "#4CC9F0" : T.inputBorder}`,
-              background: addBot ? "rgba(76,201,240,0.12)" : "transparent",
+              border: `1px solid ${addBot ? T.pick.border : T.inputBorder}`,
+              background: addBot ? T.pick.bg : "transparent",
               color: T.text,
               fontFamily: "inherit",
               fontSize: 15,
@@ -1528,7 +1660,7 @@ export default function Fahtzee() {
           >
             <BotIcon size={22} />
             <span style={{ flex: 1, textAlign: "left" }}>Add AI (computer player)</span>
-            <span style={{ fontSize: 13, color: addBot ? "#4CC9F0" : T.sub45 }}>{addBot ? "IN" : "OUT"}</span>
+            <span style={{ fontSize: 13, color: addBot ? T.pick.ink : T.sub45 }}>{addBot ? "IN" : "OUT"}</span>
           </button>
           {addBot && (
             <div style={{ display: "flex", gap: 8 }}>
@@ -1540,9 +1672,9 @@ export default function Fahtzee() {
                     flex: 1,
                     padding: "8px 4px",
                     borderRadius: 10,
-                    border: `1px solid ${aiLevel === lvl ? "#4CC9F0" : T.inputBorder}`,
-                    background: aiLevel === lvl ? "rgba(76,201,240,0.14)" : "transparent",
-                    color: aiLevel === lvl ? "#4CC9F0" : T.sub55,
+                    border: `1px solid ${aiLevel === lvl ? T.pick.border : T.inputBorder}`,
+                    background: aiLevel === lvl ? T.pick.bg : "transparent",
+                    color: aiLevel === lvl ? T.pick.ink : T.sub55,
                     fontFamily: "inherit",
                     fontSize: 13,
                     fontWeight: 700,
@@ -2234,8 +2366,11 @@ export default function Fahtzee() {
   };
 
   // ---------- Tabletop skin: its own playing-screen layout ----------
-  if (skin === "tabletop") {
-    const CHT = "#3A2E28", CREAMT = "#FBF3E6", BROWNT = "#5D4037";
+  if (T.board) {
+    const B = T.board;
+    const CHT = B.ink, CREAMT = B.paper, BROWNT = B.plaque;
+    const ink = (a) => `rgba(${B.inkRgb},${a})`;
+    const BF = B.font ? { fontFamily: B.font, fontWeight: 400, letterSpacing: "0.06em" } : null; // lettering for the board's labels
     // Five dice + gaps must fit inside the board on any phone
     const vw = typeof window !== "undefined" ? Math.min(window.innerWidth, 480) : 400;
     const boardDie = Math.max(46, Math.min(64, Math.floor((vw - 78) / 5.35)));
@@ -2254,13 +2389,13 @@ export default function Fahtzee() {
             marginTop: 6,
             padding: "8px 10px",
             borderRadius: 10,
-            border: scored ? "2.5px solid rgba(58,46,40,0.3)" : `2.5px solid ${CHT}`,
-            background: scored ? "rgba(58,46,40,0.07)" : "#FFFFFF",
+            border: scored ? `2.5px solid ${ink(0.3)}` : `2.5px solid ${CHT}`,
+            background: scored ? ink(0.07) : B.tile,
             cursor: scored || !hasRolled || player.isBot ? "default" : "pointer",
             fontFamily: "inherit",
             fontSize: 13,
             fontWeight: 700,
-            color: scored ? "rgba(58,46,40,0.45)" : CHT,
+            color: scored ? ink(0.45) : CHT,
           }}
         >
           <span style={{ textDecoration: scored ? "line-through" : "none", letterSpacing: cat.key === "fahtzee" ? "0.04em" : 0 }}>
@@ -2270,7 +2405,7 @@ export default function Fahtzee() {
             style={{
               fontVariantNumeric: "tabular-nums",
               fontWeight: 800,
-              color: scored ? "rgba(58,46,40,0.5)" : preview !== null ? (preview > 0 ? "#3D8B37" : "rgba(58,46,40,0.35)") : "rgba(58,46,40,0.3)",
+              color: scored ? ink(0.5) : preview !== null ? (preview > 0 ? B.good : ink(0.35)) : ink(0.3),
             }}
           >
             {scored ? player.scores[cat.key] : preview !== null ? `+${preview}` : "·"}
@@ -2290,6 +2425,8 @@ export default function Fahtzee() {
           letterSpacing: "0.08em",
           color: CHT,
           textAlign: "center",
+          ...BF,
+          ...(BF ? { fontSize: 17, padding: "4px 10px" } : null),
         }}
       >
         {label}
@@ -2304,8 +2441,8 @@ export default function Fahtzee() {
             maxWidth: 460,
             background: BROWNT,
             border: `3px solid ${CHT}`,
-            borderRadius: 18,
-            boxShadow: "0 6px 0 rgba(58,46,40,0.5)",
+            borderRadius: Math.min(18, B.radius),
+            boxShadow: B.shadow,
             display: "flex",
             justifyContent: "space-around",
             padding: "10px 8px 8px",
@@ -2314,17 +2451,17 @@ export default function Fahtzee() {
         >
           {players.map((p, i) => (
             <div key={i} style={{ textAlign: "center", opacity: i === current ? 1 : 0.7, minWidth: 64 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: skinColour(p.colour), letterSpacing: "0.06em", textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: skinColour(p.colour), letterSpacing: "0.06em", textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none", ...BF, ...(BF ? { fontSize: 17 } : null) }}>
                 {p.name.toUpperCase()}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: CREAMT, fontVariantNumeric: "tabular-nums" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: B.plaqueText, fontVariantNumeric: "tabular-nums", ...BF, ...(BF ? { fontSize: 34, lineHeight: 1 } : null) }}>
                 {totalsFor(p).grand}
               </div>
               <div style={{ height: 3, background: i === current ? skinColour(p.colour) : "transparent", borderRadius: 2, marginTop: 2 }} />
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.22em", color: "rgba(58,46,40,0.6)", margin: "10px 0 12px" }}>
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.22em", color: ink(0.6), margin: "10px 0 12px", ...BF, ...(BF ? { fontSize: 17, letterSpacing: "0.14em", color: CHT } : null) }}>
           ROUND {round} OF 13
         </div>
 
@@ -2335,8 +2472,8 @@ export default function Fahtzee() {
             maxWidth: 460,
             background: CREAMT,
             border: `4px solid ${CHT}`,
-            borderRadius: 24,
-            boxShadow: "0 7px 0 rgba(58,46,40,0.4)",
+            borderRadius: B.radius,
+            boxShadow: B.shadow,
             padding: "12px 10px 16px",
             display: "flex",
             flexDirection: "column",
@@ -2344,7 +2481,7 @@ export default function Fahtzee() {
             marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.16em", color: "rgba(58,46,40,0.55)", marginBottom: 10 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.16em", marginBottom: 10, ...(B.caption ? { background: B.caption, color: CHT, border: `2.5px solid ${CHT}`, padding: "5px 10px", transform: "rotate(-1deg)", boxShadow: `3px 3px 0 ${CHT}`, ...BF, fontSize: 16, letterSpacing: "0.05em" } : { color: ink(0.55) }) }}>
             {player.isBot
               ? "THE AI IS PLAYING"
               : hasRolled
@@ -2405,14 +2542,14 @@ export default function Fahtzee() {
             maxWidth: 460,
             background: CREAMT,
             border: `4px solid ${CHT}`,
-            borderRadius: 24,
-            boxShadow: "0 7px 0 rgba(58,46,40,0.4)",
+            borderRadius: B.radius,
+            boxShadow: B.shadow,
             padding: "10px 10px 12px",
           }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, alignItems: "start" }}>
             <div>
-              <Tab colour="#F0B93A" label={`UPPER · ${t.upperSum}/63${t.upperBonus ? " ✓" : ""}`} />
+              <Tab colour={B.upperTab} label={`UPPER · ${t.upperSum}/63${t.upperBonus ? " ✓" : ""}`} />
               {UPPER.map((cat) => (
                 <TileRow key={cat.key} cat={cat} />
               ))}
@@ -2421,10 +2558,10 @@ export default function Fahtzee() {
                   marginTop: 6,
                   padding: "8px 10px",
                   borderRadius: 10,
-                  border: "2.5px dashed rgba(58,46,40,0.35)",
+                  border: `2.5px dashed ${ink(0.35)}`,
                   fontSize: 12,
                   fontWeight: 800,
-                  color: t.upperBonus ? "#3D8B37" : "rgba(58,46,40,0.55)",
+                  color: t.upperBonus ? B.good : ink(0.55),
                   display: "flex",
                   justifyContent: "space-between",
                 }}
@@ -2434,7 +2571,7 @@ export default function Fahtzee() {
               </div>
             </div>
             <div>
-              <Tab colour="#7CC15C" label="LOWER" />
+              <Tab colour={B.lowerTab} label="LOWER" />
               {LOWER.map((cat) => (
                 <TileRow key={cat.key} cat={cat} />
               ))}
@@ -2444,10 +2581,10 @@ export default function Fahtzee() {
                     marginTop: 6,
                     padding: "8px 10px",
                     borderRadius: 10,
-                    border: "2.5px dashed rgba(58,46,40,0.35)",
+                    border: `2.5px dashed ${ink(0.35)}`,
                     fontSize: 12,
                     fontWeight: 800,
-                    color: "#3D8B37",
+                    color: B.good,
                     display: "flex",
                     justifyContent: "space-between",
                   }}
@@ -2470,8 +2607,8 @@ export default function Fahtzee() {
               alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 800, color: CREAMT, letterSpacing: "0.08em" }}>TOTAL</span>
-            <span style={{ fontSize: 21, fontWeight: 800, color: "#F0B93A", fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: B.plaqueText, letterSpacing: "0.08em", ...BF, ...(BF ? { fontSize: 22 } : null) }}>TOTAL</span>
+            <span style={{ fontSize: 21, fontWeight: 800, color: B.accent, fontVariantNumeric: "tabular-nums", ...BF, ...(BF ? { fontSize: 30 } : null) }}>
               {t.grand}
             </span>
           </div>
@@ -2491,7 +2628,7 @@ export default function Fahtzee() {
               background: CREAMT,
               color: CHT,
               cursor: "pointer",
-              boxShadow: "0 4px 0 rgba(58,46,40,0.4)",
+              boxShadow: `0 4px 0 ${ink(0.4)}`,
             }}
           >
             ↩ Undo {undoSnap.players[undoSnap.current].name}'s last score
