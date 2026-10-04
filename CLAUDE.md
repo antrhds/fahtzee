@@ -18,6 +18,8 @@ index.html                 GENERATED bundle — never hand edit the <script> blo
 sw.js                      Service worker, hand written
 manifest.webmanifest       PWA manifest, rarely changes
 README.md                  Player facing docs AND the in app release notes
+ROADMAP.md                 Features proposed to Tony and not yet built. Read it when he asks
+                           what is next; keep it current when one ships or a new idea is pitched
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
 test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js (Playwright), ai.js (Node + Playwright)
@@ -322,6 +324,9 @@ committing (this has gone wrong once).
 ---
 
 ## 6. Working with Tony
+
+- Suggestions for future releases live in `ROADMAP.md`, not in chat: a new session has no
+  memory of the last one. When you pitch ideas, add them there; when one ships, move it out.
 
 - Lead with what changed for the player, then how to deploy it. Skip the code walkthrough
   unless asked.
