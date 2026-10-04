@@ -26,17 +26,27 @@ players, and a fine stage for the announcer.
 
 ## Planned for v3
 
-**"We have Dice"** (Tony's idea, October 2026; questions below still open)
-A scorecard mode for a table with real dice. No passing the phone round: each player keeps
-their own card on their own phone. After their final roll in real life they tap the box they
-want, then enter what the dice show by tapping a row of six dice (1 to 6) five times; the app
-works out the score. At the end it adds up their total, and they can type in their friends'
-names and scores to see who won.
-Notes: reuses SCORERS and totalsFor from src/logic.js, so the rules (63 for the bonus, extra
-Fahtzees worth 100) stay identical to the digital game. Needs a way to fix a mistyped die
-or box. Open questions put to Tony: whether the friends' scores count in Stats and streaks;
-whether a box can be chosen with no dice entered (scratching for 0); whether the app should
-keep turn count or just fill in when tapped.
+**"We have Dice"** (Tony's idea, October 2026; decisions agreed, mock-up shown, awaiting sign off)
+A scorecard mode for a table with real dice, chosen in the lobby beside Pass and play. After
+their final roll in real life a player taps the box they want, then enters what the dice show
+by tapping a row of six dice (1 to 6) five times; a counter dot under each die shows how many
+times it has been tapped, and Undo takes the last tap back. A Bank button ("Bank 25 in Full
+House") confirms; the usual undo applies after. Dice that do not fit the box score 0: that is
+how you scratch, no separate button. Extra Fahtzees give the bonus automatically, joker style,
+exactly as the digital game does.
+Two layouts from one lobby: one name gives "your phone, your card" (friends roll their own
+phones or paper); two to four names give one phone for the table, a column per player.
+The end: your total, then type in friends' names and totals to settle who won. Agreed with
+Tony: your game, score, best and win or loss count in Stats and streaks; the friends' typed
+numbers decide the result and go on nobody's record. In the one-phone layout everyone is a
+real player and everyone's stats count, as in pass and play.
+
+**House rules** (ships with We have Dice)
+A lobby card: "Standard rules" on (today's game) or off, which asks what each extra Fahtzee is
+worth (0, 50, 100, or a typed value). Offered in We have Dice and in pass and play with no AI;
+games with the AI are always standard, as the AI is tuned for them. Store the value on the
+saved game so a resume keeps it; the scorecard's bonus line and totalsFor read it instead of
+the fixed 100.
 
 ## Bigger options
 
