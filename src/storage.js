@@ -46,7 +46,7 @@ const tallyForm = (t, game) => {
 };
 
 const tallyAdd = (t, game) => {
-  // We have Dice, played alone with no friends' totals typed in: it can set a best
+  // We have dice, played alone with no friends' totals typed in: it can set a best
   // score, but it was not a game anyone won or lost, so it is not counted as played
   if (game.unopposed) {
     game.results.forEach((r) => {
@@ -127,14 +127,14 @@ export const loadCurrentGame = () =>
     if (!s) return null;
     const g = JSON.parse(s);
     if (!g || g.v !== 2 || !Array.isArray(g.players)) return null;
-    // A We have Dice card may belong to one player; everything else needs two
+    // A We have dice card may belong to one player; everything else needs two
     if (g.players.length < (g.mode === "dice" ? 1 : 2)) return null;
     return g;
   }, null);
 export const clearCurrentGame = () =>
   safe(() => { window.localStorage.removeItem(GAME_KEY); return true; }, false);
 
-// The lobby's choices: pass and play or We have Dice, and the house rules.
+// The lobby's choices: pass and play or We have dice, and the house rules.
 // extra is what each Fahtzee after the first is worth when standard rules are off.
 const LOBBY_KEY = "fahtzee-lobby";
 export const loadLobby = () =>

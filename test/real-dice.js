@@ -1,4 +1,4 @@
-// We have Dice (v3.0): the phone keeps the card while real dice do the rolling.
+// We have dice (v3.0): the phone keeps the card while real dice do the rolling.
 // Tap a box, tap the five faces showing, bank. One name is your own card, finished by
 // typing in friends' totals; two to four are one phone for the table. Also the house
 // rules: what each extra Fahtzee is worth, offered everywhere but against the AI.
@@ -69,7 +69,7 @@ const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: pa
   console.log("Lobby: the mode switch and house rules, every skin");
   for (const skin of SKINS) {
     const { ctx, page, errors } = await open(browser, { skin });
-    await page.getByRole("button", { name: /We have Dice/ }).click();
+    await page.getByRole("button", { name: /We have dice/ }).click();
     await page.getByRole("switch", { name: /Standard rules/ }).click();
     await page.waitForTimeout(150);
     const t = await text(page);
@@ -86,10 +86,10 @@ const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: pa
     await page.getByRole("button", { name: /Add AI/ }).click();
     const after = await page.locator("[data-house-rules]").count();
     check("pass and play shows house rules, and hides them once the AI is drafted in", before === 1 && after === 0, { before, after });
-    await page.getByRole("button", { name: /We have Dice/ }).click();
+    await page.getByRole("button", { name: /We have dice/ }).click();
     await page.reload();
     await page.waitForTimeout(400);
-    check("the lobby remembers We have Dice was chosen", (await store(page, "fahtzee-lobby")).mode === "dice" && /Your name/.test(await page.locator("input").first().getAttribute("placeholder")));
+    check("the lobby remembers We have dice was chosen", (await store(page, "fahtzee-lobby")).mode === "dice" && /Your name/.test(await page.locator("input").first().getAttribute("placeholder")));
     await ctx.close();
   }
 

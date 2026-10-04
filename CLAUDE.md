@@ -130,7 +130,7 @@ test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not,
                   do not skip it, it leaves by itself, "Fahtzee" is said exactly once, the AI
                   waits for it before scoring, all seven skins, reduced motion. Math.random is
                   replaced before boot to load the dice. SHOTS=dir saves screenshots.
-test/real-dice.js We have Dice: the lobby's mode switch and house rules in all seven skins; tap a
+test/real-dice.js We have dice: the lobby's mode switch and house rules in all seven skins; tap a
                   box, tap five faces, bank; tap and score undo; the card alone and at a table of
                   four in all seven skins at 360px; friends' totals record only the owner (win,
                   loss, and no friends = best only); the recent list; extra Fahtzee values.
@@ -288,7 +288,7 @@ re-banked and start their turn afresh (v2.17). The game is recorded the moment t
 result is known, so `recordSnapRef` keeps the books as they were and `undoLast` puts
 them back; otherwise undoing the final score and banking it again counts the game twice.
 
-**We have Dice (v3.0).** `lobby.mode === "dice"`: real dice, the phone keeps score. Phases
+**We have dice (v3.0).** `lobby.mode === "dice"`: real dice, the phone keeps score. Phases
 `card` (the scorecard and a row of six dice to tap; `entry` holds the box and faces) and, for one
 player only, `friends` (type in friends' totals; `recordCard`). Two to four players finish in the
 ordinary `over` screen. A card played alone records only its owner: `winners` is the owner or

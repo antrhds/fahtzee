@@ -46,7 +46,7 @@ export const AI_WINS_LOCAL = [
   (l) => `The AI wins. ${l}, the good news is it cannot celebrate.`,
 ];
 
-// ---------- We have Dice: one card, the friends' totals typed in at the end ----------
+// ---------- We have dice: one card, the friends' totals typed in at the end ----------
 const by = (n) => `${n} point${n === 1 ? "" : "s"}`;
 // (me, margin, runnerUp)
 export const CARD_WIN = [
