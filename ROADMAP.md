@@ -4,7 +4,7 @@ Ideas proposed to Tony and not yet built, so a fresh session can pick them up. M
 to the README's version history when it ships, and delete it from here. Tony picks; when he
 does, mock it up in the real app first (CLAUDE.md, section 6).
 
-Last updated after v2.21 (October 2026).
+Last updated after v3.0 (October 2026).
 
 ## Recommended next
 
@@ -48,3 +48,4 @@ apart" feeling for a fraction of the cost. Not recommended unless he insists.
 ## Done from earlier lists
 
 - Casino's version link (and AI picker) in gold instead of the shared blue: v2.21.
+- We have Dice (real dice, the phone keeps score) and house rules for the extra Fahtzee: v3.0.

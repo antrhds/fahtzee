@@ -46,6 +46,33 @@ export const AI_WINS_LOCAL = [
   (l) => `The AI wins. ${l}, the good news is it cannot celebrate.`,
 ];
 
+// ---------- We have Dice: one card, the friends' totals typed in at the end ----------
+const by = (n) => `${n} point${n === 1 ? "" : "s"}`;
+// (me, margin, runnerUp)
+export const CARD_WIN = [
+  (n, m, r) => `${n} wins by ${by(m)}. ${r} is checking the arithmetic. ${r} may be some time.`,
+  (n, m, r) => `Congratulations, ${n}. Ahead of ${r} by ${by(m)}, and the phone did the adding up, so no appeals.`,
+  (n, m, r) => `${n} wins. ${r}, ${by(m)} short. The dice were real, and so is the defeat.`,
+  (n, m, r) => `Victory for ${n}, by ${by(m)}. ${r} would like it noted that they had a bad round seven.`,
+];
+// (me, winner, margin)
+export const CARD_LOSS = [
+  (n, w, m) => `${w} wins. ${n}, ${by(m)} adrift. Real dice, real disappointment.`,
+  (n, w, m) => `Hard lines, ${n}. ${w} takes it by ${by(m)}. Do check their arithmetic, quietly.`,
+  (n, w, m) => `${w} wins, by ${by(m)}. ${n}, the phone only counts them, it cannot help you roll them.`,
+  (n, w, m) => `Not tonight, ${n}. ${w} is ${by(m)} better and will be mentioning it.`,
+];
+// (me, the rest at the top)
+export const CARD_TIE = [
+  (n, o) => `Dead level. ${n} and ${o} share it. Nobody is happy about this.`,
+  (n, o) => `A tie. ${n} and ${o} take a share each, and the argument continues.`,
+];
+// (me, total): nobody else's score typed in
+export const CARD_ALONE = [
+  (n, t) => `${n} scores ${t}. With nobody to beat it goes down as a score, not a win.`,
+  (n, t) => `${n} scores ${t}, against nobody in particular. Noted all the same.`,
+];
+
 // ---------- The Stats panel's narrative lines ----------
 // Games needed between two players before it counts as a rivalry
 export const RIVALRY_MIN = 5;

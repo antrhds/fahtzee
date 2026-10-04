@@ -55,7 +55,9 @@ export const LOWER = [
 
 export const UPPER_KEYS = ["ones", "twos", "threes", "fours", "fives", "sixes"];
 
-export const totalsFor = (p) => {
+// extra: what each Fahtzee after the first is worth. 100 is standard; house rules may differ
+export const STANDARD_EXTRA = 100;
+export const totalsFor = (p, extra = STANDARD_EXTRA) => {
   const upperSum = UPPER.reduce((a, { key }) => a + (p.scores[key] ?? 0), 0);
   const upperBonus = upperSum >= 63 ? 35 : 0;
   const lowerSum = LOWER.reduce((a, { key }) => a + (p.scores[key] ?? 0), 0);
@@ -63,8 +65,24 @@ export const totalsFor = (p) => {
     upperSum,
     upperBonus,
     lowerSum,
-    grand: upperSum + upperBonus + lowerSum + p.yahtzeeBonuses * 100,
+    grand: upperSum + upperBonus + lowerSum + p.yahtzeeBonuses * extra,
   };
 };
 
 
+
+// Banking five dice in a box: the points, and whether it earns an extra Fahtzee bonus.
+// A second (or later) five of a kind, once the Fahtzee box holds 50, earns the bonus
+// wherever it is banked, and plays as a joker: Full House and the straights pay in full.
+export const scoreFor = (scores, key, dice) => {
+  let pts = SCORERS[key](dice);
+  let bonus = 0;
+  const isFive = counts(dice).some((c) => c === 5);
+  if (isFive && scores.fahtzee === 50 && key !== "fahtzee") {
+    bonus = 1;
+    if (key === "fullHouse") pts = 25;
+    if (key === "smallStraight") pts = 30;
+    if (key === "largeStraight") pts = 40;
+  }
+  return { pts, bonus };
+};
