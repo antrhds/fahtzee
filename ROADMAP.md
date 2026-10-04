@@ -24,6 +24,20 @@ report ("You left 31 points on the table. Round 7: you banked 3 of a Kind for 18
 would have rerolled for the Full House"). Cheap, because the engine exists; good for new
 players, and a fine stage for the announcer.
 
+## Planned for v3
+
+**"We have Dice"** (Tony's idea, October 2026; questions below still open)
+A scorecard mode for a table with real dice. No passing the phone round: each player keeps
+their own card on their own phone. After their final roll in real life they tap the box they
+want, then enter what the dice show by tapping a row of six dice (1 to 6) five times; the app
+works out the score. At the end it adds up their total, and they can type in their friends'
+names and scores to see who won.
+Notes: reuses SCORERS and totalsFor from src/logic.js, so the rules (63 for the bonus, extra
+Fahtzees worth 100) stay identical to the digital game. Needs a way to fix a mistyped die
+or box. Open questions put to Tony: whether the friends' scores count in Stats and streaks;
+whether a box can be chosen with no dice entered (scratching for 0); whether the app should
+keep turn count or just fill in when tapped.
+
 ## Bigger options
 
 **3. AI rivals with personalities**
