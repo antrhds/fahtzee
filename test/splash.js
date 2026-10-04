@@ -105,7 +105,7 @@ const splashCount = (page) => page.locator("[data-splash]").count();
   await page.tap("[data-splash]");
   await page.waitForTimeout(650);
   check("a second tap skips it", (await splashCount(page)) === 0);
-  check("the lobby is there underneath", /v2\.\d+/.test(await page.textContent("#root")));
+  check("the lobby is there underneath", /v\d+\.\d+/.test(await page.textContent("#root")));
 
   // 5. Same session: not again
   await page.reload();

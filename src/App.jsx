@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { VERSION, COLOUR_CHOICES, PIP_LAYOUTS } from "./constants.js";
-import { counts, SCORERS, UPPER, LOWER, totalsFor } from "./logic.js";
+import { counts, SCORERS, UPPER, LOWER, totalsFor, scoreFor, STANDARD_EXTRA } from "./logic.js";
 import { say, sayFahtzee, play, loadSamples, setSoundEnabled, haptic } from "./audio.js";
 import { botChooseHolds, botChooseCategory, botShouldStop, sleep } from "./ai.js";
-import { loadHistory, loadTally, recordGame, snapshotRecords, restoreRecords, saveCurrentGame, loadCurrentGame, clearCurrentGame } from "./storage.js";
-import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone, FACE_WORDS, SCENE_SUB, SCENE_SUB_AI } from "./lines.js";
+import { loadHistory, loadTally, recordGame, snapshotRecords, restoreRecords, saveCurrentGame, loadCurrentGame, clearCurrentGame, loadLobby, saveLobby } from "./storage.js";
+import { pick, nameList, SOLO_WIN, SOLO_LOSS, LOCAL_WIN, AI_WINS_LOCAL, AI_SMUG, AI_GRUDGING, RIVALRY_MIN, streakLine, rivalryLine, bestLine, isMilestone, milestonesUpTo, nextMilestone, FACE_WORDS, SCENE_SUB, SCENE_SUB_AI, CARD_WIN, CARD_LOSS, CARD_TIE, CARD_ALONE } from "./lines.js";
 import { MILESTONE_EVENT } from "./Milestone.jsx";
 import { SCENE_EVENT, SCENE_DONE, prefersLessMotion } from "./FahtzeeScene.jsx";
 
@@ -752,6 +752,19 @@ export default function Fahtzee() {
   const recordSnapRef = useRef(null); // the books as they were before this game was recorded
   const [savedGame, setSavedGame] = useState(() => loadCurrentGame());
   const [aiLevel, setAiLevel] = useState(1);
+  // The lobby's mode and house rules, remembered between visits (storage.js)
+  const [lobby, setLobbyState] = useState(() => loadLobby());
+  const setLobby = (patch) =>
+    setLobbyState((l) => { const n = { ...l, ...patch }; saveLobby(n); return n; });
+  // The game in hand: "pass" (the phone rolls) or "dice" (We have Dice: real dice, the
+  // phone keeps score), and what each extra Fahtzee is worth under its house rules
+  const [liveMode, setLiveMode] = useState("pass");
+  const [extraFahtzee, setExtraFahtzee] = useState(STANDARD_EXTRA);
+  // We have Dice: the box picked (player index + key) and the faces tapped in so far
+  const [entry, setEntry] = useState({ pi: null, key: null, dice: [] });
+  // We have Dice alone: friends' names and totals typed in at the end, and the verdict
+  const [friends, setFriends] = useState([]);
+  const [cardResult, setCardResult] = useState(null);
   const gameIdRef = useRef(0);
   // phase: "setup" | "handoff" | "playing" | "over"
   const [phase, setPhase] = useState("setup");
@@ -804,9 +817,9 @@ export default function Fahtzee() {
     window.addEventListener(SCENE_DONE, done);
     return () => window.removeEventListener(SCENE_DONE, done);
   }, []);
-  const fahtzeeScene = (face) => {
+  const fahtzeeScene = (face, who) => {
     const { players: ps, current: cur } = gameRef.current;
-    const p = ps[cur];
+    const p = who || ps[cur];
     if (!p || prefersLessMotion()) return;
     sceneOnRef.current = true;
     sceneSpokeRef.current = true;
@@ -923,11 +936,12 @@ export default function Fahtzee() {
 
   const startGame = () => {
     const roster = [];
+    const dice = lobby.mode === "dice";
     nameInputs.forEach((n, i) => {
       const name = n.trim();
       if (name) roster.push({ name, colour: COLOUR_CHOICES[colourPicks[i]].hex, scores: {}, yahtzeeBonuses: 0, isBot: false });
     });
-    if (addBot && roster.length < 4) {
+    if (!dice && addBot && roster.length < 4) {
       const used = new Set(roster.map((p) => p.colour));
       const botColour = COLOUR_CHOICES.find((c) => !used.has(c.hex)) || COLOUR_CHOICES[5];
       const bot = { name: "AI", colour: botColour.hex, scores: {}, yahtzeeBonuses: 0, isBot: true, level: aiLevel };
@@ -935,7 +949,14 @@ export default function Fahtzee() {
       if (roster.length === 1) roster.unshift(bot);
       else roster.push(bot);
     }
-    if (roster.length < 2) return;
+    if (roster.length < (dice ? 1 : 2)) return;
+    // House rules never apply against the AI: it was tuned on the standard card
+    const withBot = roster.some((p) => p.isBot);
+    setLiveMode(dice ? "dice" : "pass");
+    setExtraFahtzee(lobby.standard || withBot ? STANDARD_EXTRA : lobby.extra);
+    setEntry({ pi: null, key: null, dice: [] });
+    setFriends([]);
+    setCardResult(null);
     loadSamples();
     gameIdRef.current++;
     clearCurrentGame();
@@ -949,7 +970,93 @@ export default function Fahtzee() {
     setRound(1);
     setHeld([false, false, false, false, false]);
     setRollsLeft(3);
-    setPhase("handoff");
+    setPhase(dice ? "card" : "handoff");
+  };
+
+  // ---------- We have Dice: the phone keeps the card, real dice do the rolling ----------
+  const pickBox = (pi, key) => {
+    if (phase !== "card" || !players[pi] || players[pi].scores[key] !== undefined) return;
+    play("hold");
+    haptic(8);
+    setEntry((e) => (e.pi === pi && e.key === key ? { ...e, pi: null, key: null } : { ...e, pi, key }));
+  };
+  const tapFace = (face) => {
+    if (phase !== "card" || entry.dice.length >= 5) return;
+    play("hold");
+    haptic(8);
+    setEntry((e) => (e.dice.length >= 5 ? e : { ...e, dice: [...e.dice, face] }));
+  };
+  // Undo takes back the last die tapped; with none tapped, the last score banked
+  const cardUndo = () => {
+    if (entry.dice.length) {
+      setEntry((e) => ({ ...e, dice: e.dice.slice(0, -1) }));
+      return;
+    }
+    if (canUndo) undoLast();
+  };
+  const bankEntry = () => {
+    const { pi, key, dice: faces } = entry;
+    const p = players[pi];
+    if (phase !== "card" || !p || !key || faces.length !== 5 || p.scores[key] !== undefined) return;
+    const { pts, bonus } = scoreFor(p.scores, key, faces);
+    setUndoSnap({ players, current: pi, round, dice: [...dice], held: [...held], rollsLeft, phase: "card" });
+    const isFahtzeeMoment = (key === "fahtzee" && pts === 50) || bonus > 0;
+    play(isFahtzeeMoment ? "fahtzee" : "bank");
+    haptic(isFahtzeeMoment ? [30, 50, 30, 50, 90] : 15);
+    if (isFahtzeeMoment) {
+      sceneSpokeRef.current = false;
+      fahtzeeScene(faces[0], p);
+      if (!sceneSpokeRef.current) setTimeout(sayFahtzee, 450);
+      sceneSpokeRef.current = false;
+    }
+    const updated = players.map((q, i) =>
+      i === pi ? { ...q, scores: { ...q.scores, [key]: pts }, yahtzeeBonuses: q.yahtzeeBonuses + bonus } : q
+    );
+    setPlayers(updated);
+    setCurrent(pi);
+    setEntry({ pi: updated.length === 1 ? 0 : null, key: null, dice: [] });
+    if (updated.every((q) => Object.keys(q.scores).length === 13)) {
+      // A table of players ends like any other game; a card on its own asks for the friends' totals
+      setPhase(updated.length === 1 ? "friends" : "over");
+    }
+  };
+
+  // The end of a card played alone: the friends' totals settle it, and only the owner
+  // of the card goes on the record (their game, best, win or loss). The friends' numbers
+  // are stored with the game for the history list, but credit nobody in the tally.
+  const recordCard = () => {
+    if (phase !== "friends" || recordedRef.current || players.length !== 1) return;
+    const me = players[0];
+    const total = totalsFor(me, extraFahtzee).grand;
+    const field = friends
+      .map((f) => ({ name: f.name.trim(), total: parseInt(f.score, 10) }))
+      .filter((f) => f.name && Number.isFinite(f.total));
+    const unopposed = field.length === 0;
+    const best = unopposed ? total : Math.max(...field.map((f) => f.total));
+    const won = !unopposed && total >= best;
+    const tied = won && field.some((f) => f.total === total);
+    recordedRef.current = true;
+    recordSnapRef.current = snapshotRecords();
+    const results = [{ name: me.name, total, isBot: false }];
+    if (recordGame({ date: new Date().toISOString(), mode: "dice", results, winners: won ? [me.name] : [], friends: field, ...(unopposed ? { unopposed: true } : null) })) {
+      setHistory(loadHistory());
+      setTally(loadTally());
+      if (!unopposed) celebrateMilestones(results, won ? 3500 : 1500);
+    }
+    const leader = nameList(field.filter((f) => f.total === best).map((f) => f.name));
+    const line = unopposed
+      ? pick(CARD_ALONE)(me.name, total)
+      : tied
+      ? pick(CARD_TIE)(me.name, leader)
+      : won
+      ? pick(CARD_WIN)(me.name, total - best, leader)
+      : pick(CARD_LOSS)(me.name, leader, best - total);
+    setCardResult({ won, unopposed, tied, line });
+    if (won) {
+      play("win");
+      haptic([20, 40, 20, 40, 120]);
+    }
+    setTimeout(() => say(line), 600);
   };
 
   const toggleHold = (i) => {
@@ -961,15 +1068,7 @@ export default function Fahtzee() {
 
   const scoreCategory = (key) => {
     if (!player || player.scores[key] !== undefined || !hasRolled || rolling) return;
-    let pts = SCORERS[key](dice);
-    let bonus = 0;
-    const isFive = counts(dice).some((c) => c === 5);
-    if (isFive && player.scores.fahtzee === 50 && key !== "fahtzee") {
-      bonus = 1;
-      if (key === "fullHouse") pts = 25;
-      if (key === "smallStraight") pts = 30;
-      if (key === "largeStraight") pts = 40;
-    }
+    const { pts, bonus } = scoreFor(player.scores, key, dice);
     setUndoSnap({ players, current, round, dice: [...dice], held: [...held], rollsLeft });
     const isFahtzeeMoment = (key === "fahtzee" && pts === 50) || bonus > 0;
     play(isFahtzeeMoment ? "fahtzee" : "bank");
@@ -1077,7 +1176,9 @@ export default function Fahtzee() {
     recordedRef.current = false;
     announcedRef.current = false;
     setUndoSnap(null);
-    setPhase("playing");
+    setCardResult(null);
+    setEntry({ pi: undoSnap.players.length === 1 ? 0 : null, key: null, dice: [] });
+    setPhase(undoSnap.phase || "playing");
   };
 
   const resumeGame = () => {
@@ -1096,6 +1197,17 @@ export default function Fahtzee() {
     recordedRef.current = false;
     announcedRef.current = false;
     setSavedGame(null);
+    setExtraFahtzee(Number.isFinite(g.extraFahtzee) ? g.extraFahtzee : STANDARD_EXTRA);
+    setEntry({ pi: g.players.length === 1 ? 0 : null, key: null, dice: [] });
+    setFriends([]);
+    setCardResult(null);
+    if (g.mode === "dice") {
+      const full = g.players.every((p) => Object.keys(p.scores).length === 13);
+      setLiveMode("dice");
+      setPhase(!full ? "card" : g.players.length === 1 ? "friends" : "over");
+      return;
+    }
+    setLiveMode("pass");
     setPhase("handoff");
   };
 
@@ -1120,12 +1232,12 @@ export default function Fahtzee() {
 
   // Auto-save the game after every move; clear it when the game ends
   useEffect(() => {
-    if (phase === "handoff" || phase === "playing") {
-      saveCurrentGame({ players, current, round, dice, held, rollsLeft });
-    } else if (phase === "over") {
+    if (phase === "handoff" || phase === "playing" || phase === "card" || (phase === "friends" && !cardResult)) {
+      saveCurrentGame({ players, current, round, dice, held, rollsLeft, mode: liveMode, extraFahtzee });
+    } else if (phase === "over" || phase === "friends") {
       clearCurrentGame();
     }
-  }, [phase, players, current, round, dice, held, rollsLeft]);
+  }, [phase, players, current, round, dice, held, rollsLeft, liveMode, extraFahtzee, cardResult]);
 
   // Anyone whose lifetime games just reached 50, 100, 250, 500 (or 1000, ...) gets the
   // celebration in src/Milestone.jsx. Called once, right after recordGame.
@@ -1154,9 +1266,9 @@ export default function Fahtzee() {
   const newGame = () => {
     if (phase === "over" && !recordedRef.current && players.length > 0) {
       // Roll-off never settled: record it as a shared win
-      const totals = players.map((p) => totalsFor(p).grand);
+      const totals = players.map((p) => totalsFor(p, extraFahtzee).grand);
       const top = Math.max(...totals);
-      const results = players.map((p) => ({ name: p.name, total: totalsFor(p).grand, isBot: !!p.isBot }));
+      const results = players.map((p) => ({ name: p.name, total: totalsFor(p, extraFahtzee).grand, isBot: !!p.isBot }));
       if (recordGame({
         date: new Date().toISOString(),
         results,
@@ -1173,6 +1285,9 @@ export default function Fahtzee() {
     setRolloff(null);
     setRolloffDice(null);
     setRolloffRolling(false);
+    setEntry({ pi: null, key: null, dice: [] });
+    setFriends([]);
+    setCardResult(null);
   };
 
   // ---------- Roll-off machinery: three rolls each, highest counts ----------
@@ -1230,7 +1345,7 @@ export default function Fahtzee() {
   // fanfare, record the game exactly once, and announce the result
   useEffect(() => {
     if (phase !== "over" || recordedRef.current || players.length === 0) return;
-    const totals = players.map((p) => totalsFor(p).grand);
+    const totals = players.map((p) => totalsFor(p, extraFahtzee).grand);
     const top = Math.max(...totals);
     const topIdxs = players.map((_, i) => i).filter((i) => totals[i] === top);
     let winnerIdx = null;
@@ -1250,7 +1365,7 @@ export default function Fahtzee() {
     play("win");
     haptic([20, 40, 20, 40, 120]);
     const winner = players[winnerIdx];
-    const results = players.map((p) => ({ name: p.name, total: totalsFor(p).grand, isBot: !!p.isBot }));
+    const results = players.map((p) => ({ name: p.name, total: totalsFor(p, extraFahtzee).grand, isBot: !!p.isBot }));
     if (recordGame({ date: new Date().toISOString(), results, winners: [winner.name] })) {
       setHistory(loadHistory());
       setTally(loadTally());
@@ -1459,10 +1574,41 @@ export default function Fahtzee() {
   // ---------- Setup screen ----------
   if (phase === "setup") {
     const namedCount = nameInputs.filter((n) => n.trim()).length;
+    const diceMode = lobby.mode === "dice";
+    const needed = diceMode ? 1 : 2;
+    const seated = namedCount + (!diceMode && addBot ? 1 : 0);
+    // A toggle chip in the AI picker's livery (the pick token), for the mode and house rules
+    const chip = (on, label, onClick, extra) => (
+      <button
+        key={label}
+        onClick={onClick}
+        aria-pressed={on}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: "9px 4px",
+          borderRadius: 10,
+          border: `1px solid ${on ? T.pick.border : T.inputBorder}`,
+          background: on ? T.pick.bg : "transparent",
+          color: on ? T.pick.ink : T.sub55,
+          fontFamily: "inherit",
+          fontSize: 14,
+          fontWeight: 800,
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+          ...extra,
+        }}
+      >
+        {label}
+      </button>
+    );
+    const presetExtra = [0, 50, 100];
     return shell(
       <>
         <p style={{ color: T.sub60, margin: "4px 0 24px", fontSize: 14, maxWidth: "calc(100% - 120px)", textAlign: "center" }}>
-          Pass and play · enter 2 to 4 names · tap your die to pick its colour ·{" "}
+          {diceMode
+            ? "Real dice, phone keeps score · one name for your own card, two to four for the table ·"
+            : "Pass and play · enter 2 to 4 names · tap your die to pick its colour ·"}{" "}
           <button
             onClick={openReadme}
             style={{
@@ -1498,7 +1644,9 @@ export default function Fahtzee() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: T.text }}>Game in progress</div>
               <div style={{ fontSize: 13, color: T.sub55 }}>
-                Round {savedGame.round} of 13 · {savedGame.players[savedGame.current].name}'s turn ·{" "}
+                {savedGame.mode === "dice"
+                  ? "We have Dice · "
+                  : `Round ${savedGame.round} of 13 · ${savedGame.players[savedGame.current].name}'s turn · `}
                 {savedGame.players.map((p) => p.name).join(", ")}
               </div>
             </div>
@@ -1551,6 +1699,10 @@ export default function Fahtzee() {
             backdropFilter: "blur(6px)",
           }}
         >
+          <div role="group" aria-label="How are you playing?" style={{ display: "flex", gap: 8 }}>
+            {chip(!diceMode, "📱 Pass and play", () => setLobby({ mode: "pass" }))}
+            {chip(diceMode, "🎲 We have Dice", () => setLobby({ mode: "dice" }))}
+          </div>
           <div
             style={{
               display: "flex",
@@ -1591,7 +1743,7 @@ export default function Fahtzee() {
                 onChange={(e) =>
                   setNameInputs((n) => n.map((v, j) => (j === i ? e.target.value : v)))
                 }
-                placeholder={i < 2 ? `Player ${i + 1}` : `Player ${i + 1} (optional)`}
+                placeholder={diceMode ? (i === 0 ? "Your name" : `Player ${i + 1} (optional)`) : i < 2 ? `Player ${i + 1}` : `Player ${i + 1} (optional)`}
                 maxLength={14}
                 style={{
                   flex: 1,
@@ -1608,6 +1760,7 @@ export default function Fahtzee() {
             </div>
           ))}
           </div>
+          {!diceMode && (
           <button
             onClick={() => setAddBot((b) => !b)}
             style={{
@@ -1629,7 +1782,8 @@ export default function Fahtzee() {
             <span style={{ flex: 1, textAlign: "left" }}>Add AI (computer player)</span>
             <span style={{ fontSize: 13, color: addBot ? T.pick.ink : T.sub45 }}>{addBot ? "IN" : "OUT"}</span>
           </button>
-          {addBot && (
+          )}
+          {!diceMode && addBot && (
             <div style={{ display: "flex", gap: 8 }}>
               {["Easy", "Normal", "Ruthless"].map((label, lvl) => (
                 <button
@@ -1653,12 +1807,57 @@ export default function Fahtzee() {
               ))}
             </div>
           )}
+          {(diceMode || !addBot) && (
+            <div data-house-rules style={{ borderTop: `1px solid ${T.border2}`, paddingTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: T.sub45 }}>HOUSE RULES</div>
+              <button
+                role="switch"
+                aria-checked={lobby.standard}
+                onClick={() => setLobby({ standard: !lobby.standard })}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: 0, background: "none", border: "none", color: T.text, fontFamily: "inherit", fontSize: 15, fontWeight: 800, cursor: "pointer", textAlign: "left" }}
+              >
+                <span style={{ flex: 1 }}>Standard rules</span>
+                <span aria-hidden="true" style={{ width: 46, height: 26, borderRadius: 13, flexShrink: 0, position: "relative", background: lobby.standard ? T.green : T.border3, transition: "background 0.15s ease" }}>
+                  <span style={{ position: "absolute", top: 3, left: lobby.standard ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#FFF", boxShadow: "0 1px 3px rgba(0,0,0,0.3)", transition: "left 0.15s ease" }} />
+                </span>
+              </button>
+              {!lobby.standard && (
+                <>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.sub70 }}>Each extra Fahtzee is worth</div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {presetExtra.map((v) => chip(!lobby.otherOpen && lobby.extra === v, String(v), () => setLobby({ extra: v, otherOpen: false })))}
+                    {chip(!!lobby.otherOpen || !presetExtra.includes(lobby.extra), "Other", () => setLobby({ otherOpen: true }))}
+                  </div>
+                  {(lobby.otherOpen || !presetExtra.includes(lobby.extra)) && (
+                    <input
+                      aria-label="Points for each extra Fahtzee"
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={999}
+                      value={lobby.extra}
+                      onChange={(e) => {
+                        const v = Math.max(0, Math.min(999, parseInt(e.target.value, 10) || 0));
+                        setLobby({ extra: v });
+                      }}
+                      style={{ width: "100%", minWidth: 0, fontFamily: "inherit", fontSize: 17, padding: "9px 12px", borderRadius: 12, border: `1px solid ${T.inputBorder}`, background: T.inputBg, color: T.text, boxSizing: "border-box" }}
+                    />
+                  )}
+                </>
+              )}
+              <div style={{ fontSize: 12, color: T.sub45, lineHeight: 1.4 }}>
+                {lobby.standard
+                  ? "Each extra Fahtzee is worth 100. Turn this off to set your own."
+                  : `Standard is 100. Games against the AI always use it.`}
+              </div>
+            </div>
+          )}
           <div style={{ textAlign: "center", marginTop: 8 }}>
-            {bigButton("Let's Go", startGame, namedCount + (addBot ? 1 : 0) < 2)}
+            {bigButton("Let's Go", startGame, seated < needed)}
           </div>
-          {namedCount + (addBot ? 1 : 0) < 2 && (
+          {seated < needed && (
             <p style={{ textAlign: "center", fontSize: 13, color: T.sub45, margin: 0 }}>
-              Enter a name or two, or draft in the AI
+              {diceMode ? "Enter your name to start a card" : "Enter a name or two, or draft in the AI"}
             </p>
           )}
         </div>
@@ -1717,6 +1916,16 @@ export default function Fahtzee() {
                 <strong style={{ color: T.text }}>The lower section</strong> pays for hands: three or four of a kind (face
                 total), Full House 25, small straight 30, large straight 40, Chance is the face total any time. Five of a
                 kind is a FAHTZEE, 50 points, and every one after your first is worth 100 more.
+              </p>
+              <p style={{ margin: "0 0 10px" }}>
+                <strong style={{ color: T.text }}>We have Dice.</strong> Playing with real dice? Pick it at the top of the
+                lobby and the phone just keeps score. After your last roll, tap a box, then tap the five faces showing on
+                the dice. One name gets you your own card, with friends' totals typed in at the end; two to four share one
+                card with a column each.
+              </p>
+              <p style={{ margin: "0 0 10px" }}>
+                <strong style={{ color: T.text }}>House rules.</strong> Turn off Standard rules to choose what each extra
+                Fahtzee is worth. Games against the AI always play it at 100.
               </p>
               <p style={{ margin: 0 }}>
                 <strong style={{ color: T.text }}>Winning.</strong> Highest total after thirteen rounds takes it. Ties go to
@@ -1823,13 +2032,28 @@ export default function Fahtzee() {
                     <div style={{ padding: "8px 16px", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: T.sectionText, background: T.section }}>
                       RECENT GAMES
                     </div>
-                    {history.slice(0, 5).map((g, i) => (
-                      <div key={i} style={{ padding: "9px 16px", fontSize: 13, borderTop: `1px solid ${T.border2}`, color: T.sub60 }}>
-                        <span style={{ fontWeight: 700, color: T.text }}>{g.winners.join(" & ")}</span>
-                        {" won · "}
-                        {g.results.map((r) => `${r.name} ${r.total}`).join(" · ")}
-                      </div>
-                    ))}
+                    {history.slice(0, 5).map((g, i) => {
+                      // A real-dice card played alone lists the friends' typed totals too,
+                      // and its winner may be one of them (who is on nobody's record)
+                      const field = [...g.results, ...(g.friends || [])].sort((a, b) => b.total - a.total);
+                      const top = g.friends ? field.filter((r) => r.total === field[0].total).map((r) => r.name) : g.winners;
+                      return (
+                        <div key={i} style={{ padding: "9px 16px", fontSize: 13, borderTop: `1px solid ${T.border2}`, color: T.sub60 }}>
+                          {g.unopposed ? (
+                            <>
+                              <span style={{ fontWeight: 700, color: T.text }}>{g.results[0].name}</span>
+                              {` scored ${g.results[0].total} on real dice`}
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ fontWeight: 700, color: T.text }}>{top.join(" & ")}</span>
+                              {" won · "}
+                              {field.map((r) => `${r.name} ${r.total}`).join(" · ")}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </>
                 );
               })()}
@@ -1979,6 +2203,299 @@ export default function Fahtzee() {
     );
   }
 
+  // ---------- We have Dice: the card ----------
+  if (phase === "card") {
+    const solo = players.length === 1;
+    const pi = solo ? 0 : entry.pi;
+    const who = pi !== null && pi !== undefined ? players[pi] : null;
+    const cat = entry.key ? [...UPPER, ...LOWER].find((c) => c.key === entry.key) : null;
+    const tapped = entry.dice.length;
+    const faceCounts = counts(entry.dice);
+    const preview = who && cat && tapped === 5 ? scoreFor(who.scores, cat.key, entry.dice) : null;
+    const colour = who ? who.colour : solo ? players[0].colour : null;
+    const vw = Math.min((typeof window !== "undefined" && window.innerWidth) || 360, 420);
+    const dieSize = Math.max(36, Math.min(52, Math.floor((vw - 24 - 22 - 5 * 6) / 6)));
+    const filled = players.reduce((n, p) => n + Object.keys(p.scores).length, 0);
+    const prompt = !cat
+      ? solo ? "Tap a box, then tap what the dice show" : "Tap a box under a name, then the dice"
+      : `${solo ? "" : `${who.name} · `}${cat.label} · ${tapped < 5 ? `tap ${5 - tapped} more` : `${preview.pts}${preview.bonus ? ` + ${extraFahtzee} bonus` : ""}`}`;
+    const bankLabel = !cat
+      ? "Pick a box"
+      : tapped < 5
+      ? `${5 - tapped} more ${5 - tapped === 1 ? "die" : "dice"}`
+      : solo ? `Bank ${preview.pts} in ${cat.label}` : `Bank ${preview.pts} for ${who.name}`;
+    const canBank = !!preview;
+    const undoable = tapped > 0 || canUndo;
+    const gold = T.held.ring;
+    const cardBox = { width: "100%", maxWidth: 420, background: T.card, border: T.cardBorder, boxShadow: T.cardShadow, borderRadius: T.cardRadius, overflow: "hidden" };
+    const value = (p, i, key) => {
+      if (p.scores[key] !== undefined) return { text: p.scores[key], tone: "done" };
+      if (i === pi && entry.key === key) return { text: preview ? preview.pts : "?", tone: "sel" };
+      return { text: "–", tone: "open" };
+    };
+    const toneStyle = (tone) =>
+      tone === "sel" ? { color: T.green, fontWeight: 900 } : tone === "done" ? { color: T.text, fontWeight: 800 } : { color: T.sub25, fontWeight: 700 };
+    const selStyle = (on) => (on ? { background: "rgba(255,210,63,0.14)", boxShadow: `inset 0 0 0 2px ${gold}` } : null);
+    const houseNote = extraFahtzee !== STANDARD_EXTRA && (
+      <div style={{ fontSize: 12, color: T.sub45, marginTop: 10, textAlign: "center" }}>House rules: each extra Fahtzee {extraFahtzee}</div>
+    );
+
+    const soloRow = (c) => {
+      const p = players[0];
+      const v = value(p, 0, c.key);
+      const done = v.tone === "done";
+      return (
+        <button
+          key={c.key}
+          onClick={() => pickBox(0, c.key)}
+          disabled={done}
+          aria-label={`${c.label}${done ? `, scored ${v.text}` : ""}`}
+          style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", height: 34,
+            padding: "0 10px", border: "none", borderBottom: `1px solid ${T.border2}`,
+            borderLeft: `3px solid ${done ? "transparent" : skinColour(p.colour)}`,
+            background: "transparent", color: done ? T.sub45 : T.text, fontFamily: "inherit", fontSize: 14, fontWeight: 800,
+            cursor: done ? "default" : "pointer", textAlign: "left", whiteSpace: "nowrap",
+            ...selStyle(v.tone === "sel"),
+          }}
+        >
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{c.label}</span>
+          <span style={{ fontVariantNumeric: "tabular-nums", minWidth: 26, textAlign: "right", ...toneStyle(v.tone) }}>{v.text}</span>
+        </button>
+      );
+    };
+    const head = (label) => (
+      <div style={{ padding: "7px 10px", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.1em", color: T.sectionText, background: T.section, whiteSpace: "nowrap", overflow: "hidden" }}>{label}</div>
+    );
+
+    let card;
+    if (solo) {
+      const p = players[0];
+      const t = totalsFor(p, extraFahtzee);
+      card = (
+        <div data-card style={cardBox}>
+          <div style={{ display: "flex" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {head(`UPPER · ${t.upperSum}/63`)}
+              {UPPER.map(soloRow)}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: 34, padding: "0 10px", fontSize: 12, fontWeight: 800, color: t.upperBonus ? T.green : T.sub45, whiteSpace: "nowrap" }}>
+                <span>Bonus</span>
+                <span>{t.upperBonus ? "+35" : `${63 - t.upperSum} to go`}</span>
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0, borderLeft: `1px solid ${T.border2}` }}>
+              {head("LOWER")}
+              {LOWER.map(soloRow)}
+            </div>
+          </div>
+          {p.yahtzeeBonuses > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 12px", fontSize: 13, fontWeight: 800, color: T.green, borderTop: `1px solid ${T.border2}` }}>
+              <span>Extra Fahtzee × {p.yahtzeeBonuses}</span>
+              <span>+{p.yahtzeeBonuses * extraFahtzee}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: T.tray, fontWeight: 900, fontSize: 18 }}>
+            <span>TOTAL</span>
+            <span style={{ color: skinColour(p.colour), fontVariantNumeric: "tabular-nums" }}>{t.grand}</span>
+          </div>
+        </div>
+      );
+    } else {
+      const tots = players.map((p) => totalsFor(p, extraFahtzee));
+      const anyExtra = players.some((p) => p.yahtzeeBonuses > 0);
+      const cell = { height: 26, padding: 0, textAlign: "center", borderBottom: `1px solid ${T.border2}`, fontVariantNumeric: "tabular-nums", fontSize: 13 };
+      const label = { ...cell, textAlign: "left", padding: "0 6px 0 8px", fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+      const boxRow = (c) => (
+        <tr key={c.key}>
+          <td style={label}>{c.label}</td>
+          {players.map((p, i) => {
+            const v = value(p, i, c.key);
+            const done = v.tone === "done";
+            return (
+              <td key={i} style={cell}>
+                <button
+                  onClick={() => pickBox(i, c.key)}
+                  disabled={done}
+                  aria-label={`${p.name}, ${c.label}${done ? `, scored ${v.text}` : ""}`}
+                  style={{ width: "100%", height: 26, border: "none", background: "transparent", fontFamily: "inherit", fontSize: 13, padding: 0, cursor: done ? "default" : "pointer", ...toneStyle(v.tone), ...selStyle(v.tone === "sel") }}
+                >
+                  {v.text}
+                </button>
+              </td>
+            );
+          })}
+        </tr>
+      );
+      const sumRow = (lab, vals, style) => (
+        <tr style={style}>
+          <td style={{ ...label, fontSize: 11, color: T.sub45, height: 24 }}>{lab}</td>
+          {vals.map((v, i) => (
+            <td key={i} style={{ ...cell, height: 24, fontSize: 11, fontWeight: 800, color: T.sub45 }}>{v}</td>
+          ))}
+        </tr>
+      );
+      card = (
+        <div data-card style={cardBox}>
+          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", color: T.text }}>
+            <colgroup>
+              <col style={{ width: 104 }} />
+              {players.map((_, i) => <col key={i} />)}
+            </colgroup>
+            <thead>
+              <tr style={{ background: T.section }}>
+                <th style={{ height: 32 }} />
+                {players.map((p, i) => (
+                  <th key={i} style={{ height: 32, padding: "0 2px", fontSize: 13, fontWeight: 900, color: skinColour(p.colour), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {UPPER.map(boxRow)}
+              {sumRow("Upper", tots.map((t) => (t.upperBonus ? `${t.upperSum} +35` : t.upperSum)))}
+              {LOWER.map(boxRow)}
+              {anyExtra && sumRow("Extra Fahtzees", players.map((p) => (p.yahtzeeBonuses ? `+${p.yahtzeeBonuses * extraFahtzee}` : "–")))}
+              <tr style={{ background: T.tray }}>
+                <td style={{ ...label, height: 34, fontWeight: 900, borderBottom: "none" }}>TOTAL</td>
+                {tots.map((t, i) => (
+                  <td key={i} style={{ ...cell, height: 34, borderBottom: "none", fontWeight: 900, fontSize: 15, color: skinColour(players[i].colour) }}>{t.grand}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    return shell(
+      <>
+        <div style={{ color: T.sub60, fontSize: 13.5, margin: "0 0 10px", textAlign: "center", maxWidth: "calc(100% - 100px)" }}>
+          {solo ? (
+            <>
+              <strong style={{ color: skinColour(players[0].colour), fontSize: 16 }}>● {players[0].name}</strong> · {filled} of 13 filled
+            </>
+          ) : (
+            `We have Dice · ${filled} of ${players.length * 13} filled`
+          )}
+        </div>
+        <div style={{ width: "100%", maxWidth: 420, background: T.tray, border: T.cardBorder, borderRadius: T.cardRadius, padding: "9px 11px 6px", marginBottom: 10 }}>
+          <div data-prompt style={{ textAlign: "center", fontSize: 12.5, color: T.sub70, marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{prompt}</div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            {[1, 2, 3, 4, 5, 6].map((f) => (
+              <div key={f} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Die value={f} size={dieSize} held={faceCounts[f - 1] > 0} colour={colour} disabled={tapped >= 5} onClick={() => tapFace(f)} />
+                <div aria-label={`${faceCounts[f - 1]} tapped`} style={{ display: "flex", gap: 2, height: 7, marginTop: 6 }}>
+                  {Array.from({ length: faceCounts[f - 1] }).map((_, k) => (
+                    <span key={k} style={{ width: 6, height: 6, borderRadius: "50%", background: gold, display: "block" }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ width: "100%", maxWidth: 420, display: "flex", gap: 8, marginBottom: 10 }}>
+          <button
+            onClick={cardUndo}
+            disabled={!undoable}
+            style={{ flex: "0 0 auto", padding: "11px 14px", borderRadius: 14, border: `1px solid ${T.border3}`, background: "transparent", color: undoable ? T.text : T.sub25, fontFamily: "inherit", fontSize: 15, fontWeight: 800, cursor: undoable ? "pointer" : "default" }}
+          >
+            ↶ Undo
+          </button>
+          <button
+            onClick={bankEntry}
+            disabled={!canBank}
+            style={{
+              flex: 1, minWidth: 0, padding: "11px 10px", borderRadius: 14,
+              border: canBank ? T.btnBorder : "none", background: canBank ? T.btn : T.border2,
+              color: canBank ? "#FFF" : T.sub35, boxShadow: canBank ? T.btnShadow : "none",
+              fontFamily: T.btnFont || "inherit", fontSize: T.btnFont ? 18 : 15, fontWeight: 800,
+              textTransform: T.btnCase, letterSpacing: T.btnCase === "uppercase" ? "0.05em" : "0.01em",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: canBank ? "pointer" : "default",
+            }}
+          >
+            {bankLabel}
+          </button>
+        </div>
+        {card}
+        {houseNote}
+      </>,
+      true
+    );
+  }
+
+  // ---------- We have Dice alone: the friends' totals settle it ----------
+  if (phase === "friends") {
+    const me = players[0];
+    const t = totalsFor(me, extraFahtzee);
+    const locked = !!cardResult;
+    const rows = [...friends];
+    const last = rows[rows.length - 1];
+    if (!locked && rows.length < 7 && (!last || last.name.trim() || last.score !== "")) rows.push({ name: "", score: "" });
+    const edit = (i, field, v) =>
+      setFriends((fs) => {
+        const n = [...fs];
+        while (n.length <= i) n.push({ name: "", score: "" });
+        n[i] = { ...n[i], [field]: v };
+        return n;
+      });
+    const field = friends.map((f) => ({ name: f.name.trim(), total: parseInt(f.score, 10) })).filter((f) => f.name && Number.isFinite(f.total));
+    const top = field.length ? Math.max(t.grand, ...field.map((f) => f.total)) : null;
+    const input = { minWidth: 0, fontFamily: "inherit", fontSize: 16, padding: "10px 12px", borderRadius: 12, border: `1px solid ${T.inputBorder}`, background: T.inputBg, color: T.text, boxSizing: "border-box" };
+    const parts = [`Upper ${t.upperSum}`];
+    if (t.upperBonus) parts.push("bonus 35");
+    parts.push(`Lower ${t.lowerSum}`);
+    if (me.yahtzeeBonuses) parts.push(`extra Fahtzees ${me.yahtzeeBonuses * extraFahtzee}`);
+    return shell(
+      <>
+        {cardResult && cardResult.won && !cardResult.tied && <Confetti />}
+        <div style={{ width: "100%", maxWidth: 380, background: T.card, border: `2px solid ${skinColour(me.colour)}`, boxShadow: T.cardShadow, borderRadius: T.cardRadius, padding: "14px 16px", textAlign: "center", margin: "6px 0 16px" }}>
+          <div style={{ color: T.sub60, fontSize: 14 }}>{me.name}, your card adds up to</div>
+          <div data-card-total style={{ fontSize: 54, fontWeight: 900, lineHeight: 1.1, color: skinColour(me.colour), fontVariantNumeric: "tabular-nums" }}>{t.grand}</div>
+          <div style={{ color: T.sub45, fontSize: 12 }}>{parts.join(" + ")}</div>
+        </div>
+        <div style={{ width: "100%", maxWidth: 380 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: T.sub45, margin: "0 0 8px 4px" }}>WHO ELSE WAS PLAYING?</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, marginBottom: 10, background: T.card, border: `1px solid ${top !== null && t.grand === top ? T.held.ring : T.border2}` }}>
+            <span style={{ flex: 1, fontWeight: 800, fontSize: 16, color: skinColour(me.colour) }}>{top !== null && t.grand === top ? "👑 " : ""}{me.name}</span>
+            <span style={{ fontWeight: 900, fontSize: 19, fontVariantNumeric: "tabular-nums" }}>{t.grand}</span>
+          </div>
+          {rows.map((f, i) => {
+            const sc = parseInt(f.score, 10);
+            const crown = top !== null && f.name.trim() && Number.isFinite(sc) && sc === top;
+            return (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <input aria-label={`Friend ${i + 1} name`} value={f.name} disabled={locked} maxLength={14} placeholder="Name" onChange={(e) => edit(i, "name", e.target.value)} style={{ ...input, flex: 1, ...(crown ? { borderColor: T.held.ring } : null) }} />
+                <input aria-label={`Friend ${i + 1} score`} value={f.score} disabled={locked} type="number" inputMode="numeric" min={0} max={2000} placeholder="Score" onChange={(e) => edit(i, "score", e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} style={{ ...input, width: 84, flex: "0 0 84px", textAlign: "center" }} />
+              </div>
+            );
+          })}
+        </div>
+        {cardResult ? (
+          <>
+            <div data-card-line style={{ width: "100%", maxWidth: 380, fontSize: 14, color: T.sub70, textAlign: "center", lineHeight: 1.45, margin: "6px 0 18px" }}>{cardResult.line}</div>
+            {bigButton("Play Again", newGame)}
+          </>
+        ) : (
+          <>
+            <div style={{ margin: "8px 0 8px" }}>{bigButton("Put it on the record", recordCard)}</div>
+            <div style={{ width: "100%", maxWidth: 340, fontSize: 12, color: T.sub45, textAlign: "center", lineHeight: 1.45 }}>
+              {field.length
+                ? "Counts your game, your score and your win or loss. Your friends' numbers decide the result but go on nobody's record."
+                : "Type in your friends' totals to settle who won. With nobody else's, it counts towards your best score only."}
+            </div>
+          </>
+        )}
+        {canUndo && (
+          <button
+            onClick={undoLast}
+            style={{ marginTop: 18, fontFamily: "inherit", fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 999, border: `1px solid ${T.border3}`, background: "transparent", color: T.sub55, cursor: "pointer" }}
+          >
+            ↩ Undo your last score
+          </button>
+        )}
+      </>
+    );
+  }
+
   // ---------- Handoff screen ----------
   if (phase === "handoff") {
     const K = T.inkPage; // Comic inks this page; everyone else keeps the soft look
@@ -2032,7 +2549,7 @@ export default function Fahtzee() {
               }}
             >
               <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none", ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 20, letterSpacing: "0.05em", textShadow: K.outline } : null) }}>{p.name}</div>
-              <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 26, lineHeight: 1 } : null) }}>{totalsFor(p).grand}</div>
+              <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, ...(K ? { fontFamily: K.font, fontWeight: 400, fontSize: 26, lineHeight: 1 } : null) }}>{totalsFor(p, extraFahtzee).grand}</div>
             </div>
           ))}
         </div>
@@ -2064,7 +2581,7 @@ export default function Fahtzee() {
   if (phase === "over") {
     const K = T.inkPage;
     const ranked = players
-      .map((p, i) => ({ ...p, idx: i, total: totalsFor(p).grand }))
+      .map((p, i) => ({ ...p, idx: i, total: totalsFor(p, extraFahtzee).grand }))
       .sort((a, b) => b.total - a.total);
     const topScore = ranked[0].total;
     const tiedForFirst = ranked.filter((p) => p.total === topScore);
@@ -2256,7 +2773,7 @@ export default function Fahtzee() {
   }
 
   // ---------- Playing screen ----------
-  const t = totalsFor(player);
+  const t = totalsFor(player, extraFahtzee);
   const scoredCount = Object.keys(player.scores).length;
 
   const Row = ({ cat }) => {
@@ -2434,7 +2951,7 @@ export default function Fahtzee() {
                   {p.name.toUpperCase()}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: B.plaqueText, fontVariantNumeric: "tabular-nums", lineHeight: 1.1, ...BF, ...(BF ? { fontSize: 28, lineHeight: 1 } : null) }}>
-                  {totalsFor(p).grand}
+                  {totalsFor(p, extraFahtzee).grand}
                 </div>
                 <div style={{ height: 3, background: i === current ? skinColour(p.colour) : "transparent", borderRadius: 2, marginTop: 3 }} />
               </div>
@@ -2567,7 +3084,7 @@ export default function Fahtzee() {
                   }}
                 >
                   <span>BONUS × {player.yahtzeeBonuses}</span>
-                  <span>+{player.yahtzeeBonuses * 100}</span>
+                  <span>+{player.yahtzeeBonuses * extraFahtzee}</span>
                 </div>
               )}
             </div>
@@ -2740,7 +3257,7 @@ export default function Fahtzee() {
             {player.yahtzeeBonuses > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", fontSize: 12, color: T.green, fontWeight: 700 }}>
                 <span>Bonus × {player.yahtzeeBonuses}</span>
-                <span style={{ fontWeight: 800 }}>+{player.yahtzeeBonuses * 100}</span>
+                <span style={{ fontWeight: 800 }}>+{player.yahtzeeBonuses * extraFahtzee}</span>
               </div>
             )}
           </div>
@@ -2776,7 +3293,7 @@ export default function Fahtzee() {
             }}
           >
             <div style={{ color: skinColour(p.colour), fontWeight: 800, textShadow: colourGlowFor(skinColour(p.colour), 0.6) || "none" }}>{p.name}</div>
-            <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{totalsFor(p).grand}</div>
+            <div style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{totalsFor(p, extraFahtzee).grand}</div>
           </div>
         ))}
       </div>

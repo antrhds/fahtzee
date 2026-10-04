@@ -22,13 +22,14 @@ ROADMAP.md                 Features proposed to Tony and not yet built. Read it 
                            what is next; keep it current when one ships or a new idea is pitched
 .nojekyll                  Tells Pages to skip Jekyll and serve the tree verbatim
 package.json               Pins React. The build needs it; node_modules is gitignored
-test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js (Playwright), ai.js (Node + Playwright)
+test/                      npm test: streaks.js (jsdom), skins.js + dice-colours.js + splash.js + milestone.js + fahtzee-scene.js + undo.js + real-dice.js (Playwright), ai.js (Node + Playwright)
 sounds/                    Optional user supplied recordings (may not exist)
 entry.jsx                  Build entry point: mounts src/App.jsx and the splash overlay into #root
 src/
   App.jsx      (~2340 lines) All UI: themes, icons, Die, Confetti, screens, game flow
   constants.js VERSION string, COLOUR_CHOICES, PIP_LAYOUTS
-  logic.js     counts, sum, SCORERS, UPPER, LOWER, UPPER_KEYS, totalsFor
+  logic.js     counts, sum, SCORERS, UPPER, LOWER, UPPER_KEYS, totalsFor(p, extra), scoreFor (the
+               joker rule for a second Fahtzee, shared by both modes), STANDARD_EXTRA
   audio.js     Web Audio synth effects, sample loader, speech (say), haptics
   ai.js        botChooseHolds / botChooseCategory / botShouldStop, levels 0/1/2, sleep.
                Easy is rules of thumb; Normal and Ruthless are a look-ahead over every keep
@@ -129,6 +130,10 @@ test/fahtzee-scene.js Five alike starts the cut-scene and a mixed roll does not,
                   do not skip it, it leaves by itself, "Fahtzee" is said exactly once, the AI
                   waits for it before scoring, all seven skins, reduced motion. Math.random is
                   replaced before boot to load the dice. SHOTS=dir saves screenshots.
+test/real-dice.js We have Dice: the lobby's mode switch and house rules in all seven skins; tap a
+                  box, tap five faces, bank; tap and score undo; the card alone and at a table of
+                  four in all seven skins at 360px; friends' totals record only the owner (win,
+                  loss, and no friends = best only); the recent list; extra Fahtzee values.
 test/undo.js      The undo button goes with the next turn's first roll in all seven skins, and
                   with the first roll-off roll; undoing the final score takes the recorded
                   game back off the books so re-banking it counts once.
@@ -254,7 +259,8 @@ resume; every async loop (AI turn, roll animation, roll off) captures it and bai
 changes. Preserve this pattern in any new async work or stale timers will corrupt state.
 
 **Storage keys.** `fahtzee-tally` (lifetime stats, never expires), `fahtzee-history`
-(recent 30 games), `fahtzee-current-game` (resume), `fahtzee-skin`. All access is wrapped
+(recent 30 games), `fahtzee-current-game` (resume), `fahtzee-skin`, `fahtzee-lobby` (v3.0: the
+mode chosen and the house rules). All access is wrapped
 in try/catch — storage can be unavailable and the game must still run.
 
 The tally also holds `streak` per player (positive won, negative lost) and an `h2h`
@@ -281,6 +287,19 @@ thrown. Without that a player could roll, dislike it, undo the previous score, h
 re-banked and start their turn afresh (v2.17). The game is recorded the moment the
 result is known, so `recordSnapRef` keeps the books as they were and `undoLast` puts
 them back; otherwise undoing the final score and banking it again counts the game twice.
+
+**We have Dice (v3.0).** `lobby.mode === "dice"`: real dice, the phone keeps score. Phases
+`card` (the scorecard and a row of six dice to tap; `entry` holds the box and faces) and, for one
+player only, `friends` (type in friends' totals; `recordCard`). Two to four players finish in the
+ordinary `over` screen. A card played alone records only its owner: `winners` is the owner or
+nobody, the typed friends sit in `game.friends` and must never reach `tallyAdd` (a friend named
+like a local player would be credited a win), and a card with no friends is `unopposed`: best
+score only, not played, no streak. The saved game carries `mode` and `extraFahtzee`; a solo dice
+card is the one saved game allowed a single player.
+
+**House rules.** `extraFahtzee` is what each Fahtzee after the first is worth (standard 100).
+Every `totalsFor` call and bonus display passes it. Off the lobby's Standard rules toggle it can
+be anything 0 to 999, but any game with the AI is forced to 100: the AI is tuned on the standard card.
 
 **iOS.** `purgeUndoStack()` defuses Apple's shake to undo dialogue. Do not remove it.
 

@@ -23,6 +23,7 @@ const blankPlayer = () => ({ wins: 0, played: 0, best: 0, streak: 0 });
 // Form: current run (+n won, -n lost) and the head to head ledger. Kept in its own
 // pass so it can be rebuilt from history alone, without touching lifetime totals.
 const tallyForm = (t, game) => {
+  if (game.unopposed) return; // a real-dice card with nobody to beat: no result, no run
   const results = game.results || [];
   const won = new Set(game.winners || []);
   results.forEach((r) => {
@@ -45,6 +46,15 @@ const tallyForm = (t, game) => {
 };
 
 const tallyAdd = (t, game) => {
+  // We have Dice, played alone with no friends' totals typed in: it can set a best
+  // score, but it was not a game anyone won or lost, so it is not counted as played
+  if (game.unopposed) {
+    game.results.forEach((r) => {
+      const p = (t.players[r.name] = t.players[r.name] || blankPlayer());
+      p.best = Math.max(p.best, r.total);
+    });
+    return;
+  }
   t.games++;
   game.results.forEach((r) => {
     const p = (t.players[r.name] = t.players[r.name] || blankPlayer());
@@ -116,8 +126,22 @@ export const loadCurrentGame = () =>
     const s = window.localStorage.getItem(GAME_KEY);
     if (!s) return null;
     const g = JSON.parse(s);
-    if (!g || g.v !== 2 || !Array.isArray(g.players) || g.players.length < 2) return null;
+    if (!g || g.v !== 2 || !Array.isArray(g.players)) return null;
+    // A We have Dice card may belong to one player; everything else needs two
+    if (g.players.length < (g.mode === "dice" ? 1 : 2)) return null;
     return g;
   }, null);
 export const clearCurrentGame = () =>
   safe(() => { window.localStorage.removeItem(GAME_KEY); return true; }, false);
+
+// The lobby's choices: pass and play or We have Dice, and the house rules.
+// extra is what each Fahtzee after the first is worth when standard rules are off.
+const LOBBY_KEY = "fahtzee-lobby";
+export const loadLobby = () =>
+  safe(() => {
+    const l = JSON.parse(window.localStorage.getItem(LOBBY_KEY) || "{}") || {};
+    const extra = Number.isFinite(l.extra) && l.extra >= 0 && l.extra <= 999 ? Math.round(l.extra) : 50;
+    return { mode: l.mode === "dice" ? "dice" : "pass", standard: l.standard !== false, extra };
+  }, { mode: "pass", standard: true, extra: 50 });
+export const saveLobby = (l) =>
+  safe(() => { window.localStorage.setItem(LOBBY_KEY, JSON.stringify(l)); return true; }, false);

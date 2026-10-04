@@ -16,6 +16,14 @@ Pass the phone around. Each turn you get three rolls of five dice, holding the o
 
 The upper section pays a 35 point bonus if you can scrape 63 across the number categories, and the card counts you down to it as you go. Five of a kind is a Fahtzee, worth 50, and every one after that is worth 100 more.
 
+## We have Dice
+
+Sometimes there are real dice on the table and nobody wants to pass a phone round. Pick *We have Dice* in the lobby and the phone stops rolling and just keeps score. Roll in real life as usual. When your last roll has landed, tap the box you want on the card, then tap the five faces showing on the row of six dice at the top: two threes and three fives is two taps on the three and three on the five. A gold dot under each die counts the taps, Undo takes the last one back, and the Bank button says exactly what is about to happen ("Bank 25 in Full House") before anything goes in. Dice that do not fit the box score nothing, which is how you cross one off. Extra Fahtzees earn their bonus by themselves.
+
+Enter one name and you get your own card. Everyone else keeps theirs on their own phones, or on paper if they are like that. At the end it adds up your score and asks who else was playing: type in their names and totals and it crowns the winner. Your game, score and win or loss go in the Stats, so your win ratio keeps honest company with real dice too. Your friends' numbers settle the result but go on nobody's record, because anyone can type anything. With no friends' totals typed in it is not a win or a loss, just a score, and it can still set your best.
+
+Enter two to four names and the phone sits in the middle of the table as one card with a column each. Tap a box under someone's name, tap their dice, bank. The game ends like any other, with everyone's stats counted and a roll off on the phone if it comes to that.
+
 ## Fahtzee forgives
 
 Banked the wrong category with a clumsy thumb? An undo button appears after every score, on every screen, and puts things back exactly as they were. One level deep, so use it before the next mistake. It is for thumbs, not second chances: it disappears the moment the next player throws their first roll, or the first roll of a roll off, so nobody can roll, dislike it, undo the previous score and start their turn again. Undo the final score of a game and the result comes off the stats too, so banking it again does not count the game twice.
@@ -58,9 +66,13 @@ Shake to roll uses the device motion sensors, which browsers only allow over HTT
 
 ## House rules
 
-There is only one: no arguing with the dice. They cannot hear you and they do not care.
+There is one that never changes: no arguing with the dice. They cannot hear you and they do not care.
+
+The rest are up for negotiation. Turn off *Standard rules* in the lobby and choose what each Fahtzee after the first is worth: 0, 50, 100 or a number of your own, for households that have been doing it differently for thirty years and are not about to stop. The lobby remembers your choice. House rules work in pass and play and with real dice. Games against the AI always use the standard 100, because that is what it learned on and it would only complain.
 
 ## Version history
+
+**v3.0** We have Dice: real dice on the table and the phone keeping score, either on your own card with friends' totals typed in at the end, or as one card for the table. House rules let you set what an extra Fahtzee is worth. Nobody has to pass the phone round, so nobody has to clean the phone either.
 
 **v2.21** Sweet Shop's dice lost the round shine in the corner, which was sitting where a pip would go and turning ones into twos; the sugar now spreads across the top instead. Casino's version link and AI picker are gold rather than a blue that argued with the baize
 
