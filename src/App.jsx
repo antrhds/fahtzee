@@ -756,13 +756,13 @@ export default function Fahtzee() {
   const [lobby, setLobbyState] = useState(() => loadLobby());
   const setLobby = (patch) =>
     setLobbyState((l) => { const n = { ...l, ...patch }; saveLobby(n); return n; });
-  // The game in hand: "pass" (the phone rolls) or "dice" (We have Dice: real dice, the
+  // The game in hand: "pass" (the phone rolls) or "dice" (We have dice: real dice, the
   // phone keeps score), and what each extra Fahtzee is worth under its house rules
   const [liveMode, setLiveMode] = useState("pass");
   const [extraFahtzee, setExtraFahtzee] = useState(STANDARD_EXTRA);
-  // We have Dice: the box picked (player index + key) and the faces tapped in so far
+  // We have dice: the box picked (player index + key) and the faces tapped in so far
   const [entry, setEntry] = useState({ pi: null, key: null, dice: [] });
-  // We have Dice alone: friends' names and totals typed in at the end, and the verdict
+  // We have dice alone: friends' names and totals typed in at the end, and the verdict
   const [friends, setFriends] = useState([]);
   const [cardResult, setCardResult] = useState(null);
   const gameIdRef = useRef(0);
@@ -973,7 +973,7 @@ export default function Fahtzee() {
     setPhase(dice ? "card" : "handoff");
   };
 
-  // ---------- We have Dice: the phone keeps the card, real dice do the rolling ----------
+  // ---------- We have dice: the phone keeps the card, real dice do the rolling ----------
   const pickBox = (pi, key) => {
     if (phase !== "card" || !players[pi] || players[pi].scores[key] !== undefined) return;
     play("hold");
@@ -1645,7 +1645,7 @@ export default function Fahtzee() {
               <div style={{ fontWeight: 800, fontSize: 15, color: T.text }}>Game in progress</div>
               <div style={{ fontSize: 13, color: T.sub55 }}>
                 {savedGame.mode === "dice"
-                  ? "We have Dice · "
+                  ? "We have dice · "
                   : `Round ${savedGame.round} of 13 · ${savedGame.players[savedGame.current].name}'s turn · `}
                 {savedGame.players.map((p) => p.name).join(", ")}
               </div>
@@ -1701,7 +1701,7 @@ export default function Fahtzee() {
         >
           <div role="group" aria-label="How are you playing?" style={{ display: "flex", gap: 8 }}>
             {chip(!diceMode, "📱 Pass and play", () => setLobby({ mode: "pass" }))}
-            {chip(diceMode, "🎲 We have Dice", () => setLobby({ mode: "dice" }))}
+            {chip(diceMode, "🎲 We have dice", () => setLobby({ mode: "dice" }))}
           </div>
           <div
             style={{
@@ -1918,7 +1918,7 @@ export default function Fahtzee() {
                 kind is a FAHTZEE, 50 points, and every one after your first is worth 100 more.
               </p>
               <p style={{ margin: "0 0 10px" }}>
-                <strong style={{ color: T.text }}>We have Dice.</strong> Playing with real dice? Pick it at the top of the
+                <strong style={{ color: T.text }}>We have dice.</strong> Playing with real dice? Pick it at the top of the
                 lobby and the phone just keeps score. After your last roll, tap a box, then tap the five faces showing on
                 the dice. One name gets you your own card, with friends' totals typed in at the end; two to four share one
                 card with a column each.
@@ -2203,7 +2203,7 @@ export default function Fahtzee() {
     );
   }
 
-  // ---------- We have Dice: the card ----------
+  // ---------- We have dice: the card ----------
   if (phase === "card") {
     const solo = players.length === 1;
     const pi = solo ? 0 : entry.pi;
@@ -2374,7 +2374,7 @@ export default function Fahtzee() {
               <strong style={{ color: skinColour(players[0].colour), fontSize: 16 }}>● {players[0].name}</strong> · {filled} of 13 filled
             </>
           ) : (
-            `We have Dice · ${filled} of ${players.length * 13} filled`
+            `We have dice · ${filled} of ${players.length * 13} filled`
           )}
         </div>
         <div style={{ width: "100%", maxWidth: 420, background: T.tray, border: T.cardBorder, borderRadius: T.cardRadius, padding: "9px 11px 6px", marginBottom: 10 }}>
@@ -2422,7 +2422,7 @@ export default function Fahtzee() {
     );
   }
 
-  // ---------- We have Dice alone: the friends' totals settle it ----------
+  // ---------- We have dice alone: the friends' totals settle it ----------
   if (phase === "friends") {
     const me = players[0];
     const t = totalsFor(me, extraFahtzee);

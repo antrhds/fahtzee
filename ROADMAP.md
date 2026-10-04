@@ -48,4 +48,4 @@ apart" feeling for a fraction of the cost. Not recommended unless he insists.
 ## Done from earlier lists
 
 - Casino's version link (and AI picker) in gold instead of the shared blue: v2.21.
-- We have Dice (real dice, the phone keeps score) and house rules for the extra Fahtzee: v3.0.
+- We have dice (real dice, the phone keeps score) and house rules for the extra Fahtzee: v3.0.
